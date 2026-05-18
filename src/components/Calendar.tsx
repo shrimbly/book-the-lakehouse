@@ -759,7 +759,6 @@ function ConfirmBar({
   canAdjustEnd: (delta: number) => boolean;
 }) {
   const [editing, setEditing] = useState(false);
-  const nights = nightsBetween(start, end);
   const sameDay = start === end;
   const canEdit = locked;
   return (
@@ -774,8 +773,10 @@ function ConfirmBar({
       <div className="pointer-events-none fixed inset-x-0 bottom-10 sm:bottom-14 z-30 flex justify-center px-3 sm:px-4 animate-toast-pop">
         <div
           className={[
-            "pointer-events-auto flex w-full flex-col rounded-[12px] sm:rounded-[14px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)] max-w-[calc(100vw-1.5rem)] sm:w-[480px] origin-bottom transition-transform duration-500 ease-out",
-            locked ? "-translate-y-3 scale-[1.035]" : "translate-y-0 scale-100",
+            "flex w-full flex-col rounded-[12px] sm:rounded-[14px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)] max-w-[calc(100vw-1.5rem)] sm:w-[480px] origin-bottom transition-transform duration-500 ease-out",
+            locked
+              ? "pointer-events-auto -translate-y-3 scale-[1.035]"
+              : "pointer-events-none translate-y-0 scale-100",
           ].join(" ")}
         >
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-4 px-3 py-2.5 sm:px-4 sm:py-3">
@@ -788,21 +789,21 @@ function ConfirmBar({
               ) : (
                 <>
                   <span className="hidden sm:block text-[13px] font-medium truncate">
-                    {fmtDay(start)} → {fmtDay(end)}
+                    {fmtDay(start)}, to {fmtDay(end)}
                   </span>
                   <span className="sm:hidden text-[12px] font-medium truncate">
-                    {fmtDay(start)}
+                    {fmtDay(start)},
                   </span>
-                  <span className="sm:hidden text-[12px] font-medium truncate text-muted">
-                    → {fmtDay(end)}
+                  <span className="sm:hidden text-[12px] font-medium truncate">
+                    to {fmtDay(end)}
                   </span>
                 </>
               )}
-              <span className="text-[10px] sm:text-[11px] text-muted">
-                {locked
-                  ? `${nights} night${nights === 1 ? "" : "s"} as ${person.first}`
-                  : `pick an end date · ${person.first}`}
-              </span>
+              {!locked ? (
+                <span className="text-[10px] sm:text-[11px] text-muted">
+                  pick an end date · {person.first}
+                </span>
+              ) : null}
             </div>
             {canEdit ? (
               <button
@@ -828,7 +829,7 @@ function ConfirmBar({
               <button
                 type="button"
                 onClick={onCancel}
-                className="rounded-full px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] text-muted transition-colors hover:text-ink"
+                className="pointer-events-auto rounded-full px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] text-muted transition-colors hover:text-ink"
               >
                 Cancel
               </button>
@@ -836,7 +837,7 @@ function ConfirmBar({
                 type="button"
                 onClick={onConfirm}
                 disabled={!locked || !!conflict || pending}
-                className="rounded-full bg-ink px-3 sm:px-4 py-1.5 text-[11px] sm:text-[12px] font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25"
+                className="pointer-events-auto rounded-full bg-ink px-3 sm:px-4 py-1.5 text-[11px] sm:text-[12px] font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25"
               >
                 {pending ? "Saving…" : "Confirm"}
               </button>
