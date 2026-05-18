@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, lte, gte } from "drizzle-orm";
+import { and, eq, ne, lte, gte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
@@ -54,7 +54,63 @@ export async function createBooking(input: {
 }
 
 export async function deleteBooking(id: string): Promise<{ ok: true } | { error: string }> {
+  const me = await getCurrentIdentityId();
+  if (!me) return { error: "Not signed in" };
+  const rows = await db
+    .select({ personId: bookings.personId })
+    .from(bookings)
+    .where(eq(bookings.id, id))
+    .limit(1);
+  if (rows.length === 0) return { error: "Booking not found" };
+  if (rows[0].personId !== me) return { error: "Not your booking" };
   await db.delete(bookings).where(eq(bookings.id, id));
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function updateBooking(input: {
+  id: string;
+  start: string;
+  end: string;
+}): Promise<{ ok: true } | { error: string }> {
+  if (!ISO_DATE.test(input.start) || !ISO_DATE.test(input.end)) {
+    return { error: "Invalid date format" };
+  }
+  if (input.start > input.end) {
+    return { error: "Start date is after end date" };
+  }
+  const me = await getCurrentIdentityId();
+  if (!me) return { error: "Not signed in" };
+
+  const rows = await db
+    .select({ personId: bookings.personId })
+    .from(bookings)
+    .where(eq(bookings.id, input.id))
+    .limit(1);
+  if (rows.length === 0) return { error: "Booking not found" };
+  if (rows[0].personId !== me) return { error: "Not your booking" };
+
+  // Conflict check: any OTHER booking whose range overlaps
+  const conflicts = await db
+    .select({ id: bookings.id })
+    .from(bookings)
+    .where(
+      and(
+        ne(bookings.id, input.id),
+        lte(bookings.startDate, input.end),
+        gte(bookings.endDate, input.start),
+      ),
+    )
+    .limit(1);
+  if (conflicts.length > 0) {
+    return { error: "Those dates overlap an existing stay" };
+  }
+
+  await db
+    .update(bookings)
+    .set({ startDate: input.start, endDate: input.end })
+    .where(eq(bookings.id, input.id));
+
   revalidatePath("/");
   return { ok: true };
 }

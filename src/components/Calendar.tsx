@@ -4,11 +4,12 @@ import { useEffect, useMemo, useOptimistic, useState, useTransition } from "reac
 import { createPortal } from "react-dom";
 import type { Booking, Person } from "@/lib/data";
 import { DOW_MON_FIRST, buildMonthCells } from "@/lib/calendar";
-import { createBooking, deleteBooking } from "@/app/actions";
+import { createBooking, deleteBooking, updateBooking } from "@/app/actions";
 
 type OptimisticAction =
   | { type: "add"; booking: Booking }
-  | { type: "remove"; id: string };
+  | { type: "remove"; id: string }
+  | { type: "update"; booking: Booking };
 
 const MONTH_SHORT = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -37,8 +38,10 @@ function rangeOverlapsBookings(
   start: string,
   end: string,
   bookings: Booking[],
+  excludeId?: string | null,
 ): boolean {
   for (const b of bookings) {
+    if (excludeId && b.id === excludeId) continue;
     if (start <= b.end && end >= b.start) return true;
   }
   return false;
@@ -73,6 +76,8 @@ export function Calendar({
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actioningId, setActioningId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -83,6 +88,9 @@ export function Calendar({
   >(initialBookings, (state, action) => {
     if (action.type === "add") return [...state, action.booking];
     if (action.type === "remove") return state.filter((b) => b.id !== action.id);
+    if (action.type === "update") {
+      return state.map((b) => (b.id === action.booking.id ? action.booking : b));
+    }
     return state;
   });
 
@@ -90,8 +98,15 @@ export function Calendar({
   const allBookings = optimisticBookings;
 
   const cells = useMemo(
-    () => buildMonthCells(year, month, allBookings, people, today),
-    [year, month, allBookings, people, today],
+    () =>
+      buildMonthCells(
+        year,
+        month,
+        editingId ? allBookings.filter((b) => b.id !== editingId) : allBookings,
+        people,
+        today,
+      ),
+    [year, month, allBookings, people, today, editingId],
   );
 
   const preview = useMemo(() => {
@@ -111,13 +126,14 @@ export function Calendar({
   const conflict = useMemo(() => {
     if (!preview) return null;
     for (const b of allBookings) {
+      if (editingId && b.id === editingId) continue;
       if (preview.start <= b.end && preview.end >= b.start) {
         const p = people.find((q) => q.id === b.personId);
         return p?.first ?? "another stay";
       }
     }
     return null;
-  }, [preview, allBookings, people]);
+  }, [preview, allBookings, people, editingId]);
 
   type RowRibbon = {
     gridRow: number;
@@ -147,6 +163,7 @@ export function Calendar({
   const realRows = useMemo<RealRow[]>(() => {
     const allRows: RealRow[] = [];
     allBookings.forEach((booking) => {
+      if (editingId && booking.id === editingId) return;
       const person = people.find((p) => p.id === booking.personId);
       if (!person) return;
 
@@ -199,7 +216,7 @@ export function Calendar({
       allRows.push(...bookingRows);
     });
     return allRows;
-  }, [allBookings, cells, people]);
+  }, [allBookings, cells, people, editingId]);
 
   const previewRows = useMemo<RowRibbon[]>(() => {
     if (!preview) return [];
@@ -249,6 +266,7 @@ export function Calendar({
     setPickEnd(null);
     setHovered(null);
     setIsDragging(false);
+    setEditingId(null);
   }
 
   function cellMouseDown(iso: string, inMonth: boolean, hasBooking: boolean) {
@@ -300,21 +318,33 @@ export function Calendar({
     if (!pickStart || !pickEnd || conflict || !me) return;
     const start = pickStart;
     const end = pickEnd;
+    const id = editingId;
     setServerError(null);
     cancel();
     startTransition(async () => {
-      dispatchOptimistic({
-        type: "add",
-        booking: {
-          id: crypto.randomUUID(),
-          personId: meId,
-          start,
-          end,
-        },
-      });
-      const result = await createBooking({ personId: meId, start, end });
-      if ("error" in result) {
-        setServerError(result.error);
+      if (id) {
+        dispatchOptimistic({
+          type: "update",
+          booking: { id, personId: meId, start, end },
+        });
+        const result = await updateBooking({ id, start, end });
+        if ("error" in result) {
+          setServerError(result.error);
+        }
+      } else {
+        dispatchOptimistic({
+          type: "add",
+          booking: {
+            id: crypto.randomUUID(),
+            personId: meId,
+            start,
+            end,
+          },
+        });
+        const result = await createBooking({ personId: meId, start, end });
+        if ("error" in result) {
+          setServerError(result.error);
+        }
       }
     });
   }
@@ -324,7 +354,7 @@ export function Calendar({
     const newStart = shiftIso(pickStart, delta);
     const end = pickEnd ?? pickStart;
     if (newStart > end) return;
-    if (rangeOverlapsBookings(newStart, end, allBookings)) return;
+    if (rangeOverlapsBookings(newStart, end, allBookings, editingId)) return;
     setPickStart(newStart);
   }
 
@@ -333,7 +363,7 @@ export function Calendar({
     const cur = pickEnd ?? pickStart;
     const newEnd = shiftIso(cur, delta);
     if (newEnd < pickStart) return;
-    if (rangeOverlapsBookings(pickStart, newEnd, allBookings)) return;
+    if (rangeOverlapsBookings(pickStart, newEnd, allBookings, editingId)) return;
     setPickEnd(newEnd);
   }
 
@@ -342,7 +372,7 @@ export function Calendar({
     const newStart = shiftIso(pickStart, delta);
     const end = pickEnd ?? pickStart;
     if (newStart > end) return false;
-    return !rangeOverlapsBookings(newStart, end, allBookings);
+    return !rangeOverlapsBookings(newStart, end, allBookings, editingId);
   }
 
   function canAdjustEnd(delta: number): boolean {
@@ -350,7 +380,7 @@ export function Calendar({
     const cur = pickEnd ?? pickStart;
     const newEnd = shiftIso(cur, delta);
     if (newEnd < pickStart) return false;
-    return !rangeOverlapsBookings(pickStart, newEnd, allBookings);
+    return !rangeOverlapsBookings(pickStart, newEnd, allBookings, editingId);
   }
 
   function confirmDelete() {
@@ -390,6 +420,15 @@ export function Calendar({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [deletingId]);
+
+  useEffect(() => {
+    if (!actioningId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setActioningId(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [actioningId]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -496,13 +535,16 @@ export function Calendar({
 
         {realRows.map((rr) => {
           const isOwn = rr.personId === meId;
-          const isDeleting = deletingId === rr.bookingId;
+          const isActive =
+            actioningId === rr.bookingId ||
+            deletingId === rr.bookingId ||
+            editingId === rr.bookingId;
           return (
             <div
               key={rr.bookingKey}
               onClick={
                 isOwn && !pickStart
-                  ? () => setDeletingId(rr.bookingId)
+                  ? () => setActioningId(rr.bookingId)
                   : undefined
               }
               className={[
@@ -510,7 +552,7 @@ export function Calendar({
                 isOwn && !pickStart
                   ? "cursor-pointer hover:opacity-90"
                   : "pointer-events-none",
-                isDeleting
+                isActive
                   ? "outline outline-2 outline-offset-1 outline-ink/60"
                   : "",
                 rr.isBookingStart ? "pl-[30px] sm:pl-[42px]" : "pl-1.5 sm:pl-2",
@@ -547,7 +589,7 @@ export function Calendar({
                 key={`av-${rr.bookingKey}`}
                 onClick={
                   isOwn && !pickStart
-                    ? () => setDeletingId(rr.bookingId)
+                    ? () => setActioningId(rr.bookingId)
                     : undefined
                 }
                 className={[
@@ -647,6 +689,40 @@ export function Calendar({
                   canAdjustStart={canAdjustStart}
                   canAdjustEnd={canAdjustEnd}
                   pending={isPending}
+                  mode={editingId ? "edit" : "create"}
+                  hasChanges={
+                    editingId
+                      ? (() => {
+                          const b = optimisticBookings.find(
+                            (x) => x.id === editingId,
+                          );
+                          if (!b) return true;
+                          return b.start !== pickStart || b.end !== pickEnd;
+                        })()
+                      : true
+                  }
+                />
+              ) : actioningId ? (
+                <ChoiceBar
+                  booking={
+                    optimisticBookings.find((b) => b.id === actioningId) ?? null
+                  }
+                  person={me}
+                  onCancel={() => setActioningId(null)}
+                  onEdit={() => {
+                    const b = optimisticBookings.find(
+                      (x) => x.id === actioningId,
+                    );
+                    if (!b) return;
+                    setActioningId(null);
+                    setEditingId(b.id);
+                    setPickStart(b.start);
+                    setPickEnd(b.end);
+                  }}
+                  onDelete={() => {
+                    setDeletingId(actioningId);
+                    setActioningId(null);
+                  }}
                 />
               ) : deletingId ? (
                 <DeleteBar
@@ -744,6 +820,8 @@ function ConfirmBar({
   onAdjustEnd,
   canAdjustStart,
   canAdjustEnd,
+  mode = "create",
+  hasChanges = true,
 }: {
   start: string;
   end: string;
@@ -757,10 +835,20 @@ function ConfirmBar({
   onAdjustEnd: (delta: number) => void;
   canAdjustStart: (delta: number) => boolean;
   canAdjustEnd: (delta: number) => boolean;
+  mode?: "create" | "edit";
+  hasChanges?: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(mode === "edit");
   const sameDay = start === end;
   const canEdit = locked;
+  const confirmLabel =
+    mode === "edit"
+      ? pending
+        ? "Saving…"
+        : "Save"
+      : pending
+        ? "Saving…"
+        : "Confirm";
   return (
     <>
       {locked ? (
@@ -836,10 +924,10 @@ function ConfirmBar({
               <button
                 type="button"
                 onClick={onConfirm}
-                disabled={!locked || !!conflict || pending}
+                disabled={!locked || !!conflict || pending || !hasChanges}
                 className="pointer-events-auto rounded-full bg-ink px-3 sm:px-4 py-1.5 text-[11px] sm:text-[12px] font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25"
               >
-                {pending ? "Saving…" : "Confirm"}
+                {confirmLabel}
               </button>
             </div>
           </div>
@@ -955,6 +1043,82 @@ function PersonChip({ person }: { person: Person }) {
   );
 }
 
+function ChoiceBar({
+  booking,
+  person,
+  onCancel,
+  onEdit,
+  onDelete,
+}: {
+  booking: Booking | null;
+  person: Person;
+  onCancel: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  if (!booking) return null;
+  const sameDay = booking.start === booking.end;
+  return (
+    <>
+      <div
+        aria-hidden
+        onPointerDown={onCancel}
+        className="fixed inset-0 z-20 bg-ink/35 animate-backdrop-fade"
+      />
+      <div className="pointer-events-none fixed inset-x-0 bottom-10 sm:bottom-14 z-30 flex justify-center px-3 sm:px-4 animate-toast-pop">
+        <div className="pointer-events-auto flex w-full flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-4 rounded-[12px] sm:rounded-[14px] border border-rule bg-paper px-3 py-2.5 sm:px-4 sm:py-3 shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)] max-w-[calc(100vw-1.5rem)] sm:w-[480px]">
+          <PersonChip person={person} />
+          <div className="flex flex-col leading-tight min-w-0">
+            {sameDay ? (
+              <span className="text-[12px] sm:text-[13px] font-medium truncate">
+                {fmtDay(booking.start)}
+              </span>
+            ) : (
+              <>
+                <span className="hidden sm:block text-[13px] font-medium truncate">
+                  {fmtDay(booking.start)}, to {fmtDay(booking.end)}
+                </span>
+                <span className="sm:hidden text-[12px] font-medium truncate">
+                  {fmtDay(booking.start)},
+                </span>
+                <span className="sm:hidden text-[12px] font-medium truncate">
+                  to {fmtDay(booking.end)}
+                </span>
+              </>
+            )}
+            <span className="text-[10px] sm:text-[11px] text-muted">
+              your stay · {person.first}
+            </span>
+          </div>
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-full px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] text-muted transition-colors hover:text-ink"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className="rounded-full border border-rule px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium text-ink transition-colors hover:border-ink"
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded-full bg-ink px-3 sm:px-4 py-1.5 text-[11px] sm:text-[12px] font-medium text-paper transition-opacity hover:opacity-90"
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function DeleteBar({
   booking,
   person,
@@ -975,7 +1139,7 @@ function DeleteBar({
     <>
       <div
         aria-hidden
-        onClick={onCancel}
+        onPointerDown={onCancel}
         className="fixed inset-0 z-20 bg-ink/35 animate-backdrop-fade"
       />
       <div className="pointer-events-none fixed inset-x-0 bottom-10 sm:bottom-14 z-30 flex justify-center px-3 sm:px-4 animate-toast-pop">
