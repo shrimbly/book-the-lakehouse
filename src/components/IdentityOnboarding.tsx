@@ -25,18 +25,27 @@ export function IdentityOnboarding({ people }: { people: Person[] }) {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12 sm:py-20">
       <div className="w-full max-w-[420px]">
-        <div className="mb-8 sm:mb-12 flex items-center text-[12px] text-muted">
+        <div
+          className="mb-8 sm:mb-12 flex items-center text-[12px] text-muted animate-blur-fade"
+          style={{ animationDelay: "0ms" }}
+        >
           <span className="mr-2 inline-block h-[5px] w-[5px] -translate-y-[1px] rounded-full bg-ink" />
           Kuratau Bach
         </div>
-        <h1 className="m-0 mb-2 text-[44px] sm:text-[56px] font-semibold leading-[0.95] tracking-[-0.04em]">
+        <h1
+          className="m-0 mb-2 text-[44px] sm:text-[56px] font-semibold leading-[0.95] tracking-[-0.04em] animate-blur-fade"
+          style={{ animationDelay: "80ms" }}
+        >
           Welcome
         </h1>
-        <p className="mb-8 sm:mb-10 text-[14px] text-muted">
+        <p
+          className="mb-8 sm:mb-10 text-[14px] text-muted animate-blur-fade"
+          style={{ animationDelay: "160ms" }}
+        >
           Who&rsquo;s booking?
         </p>
         <div className="space-y-1">
-          {people.map((p) => {
+          {people.map((p, i) => {
             const isPicking = pickingId === p.id && isPending;
             return (
               <button
@@ -44,7 +53,8 @@ export function IdentityOnboarding({ people }: { people: Person[] }) {
                 type="button"
                 onClick={() => pick(p.id)}
                 disabled={isPending}
-                className="flex w-full items-center gap-3 rounded-[10px] border border-rule px-3 py-2.5 text-left transition-all hover:border-ink disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ animationDelay: `${240 + i * 35}ms` }}
+                className="flex w-full items-center gap-3 rounded-[10px] border border-rule px-3 py-2.5 text-left transition-all hover:border-ink disabled:cursor-not-allowed disabled:opacity-50 animate-blur-fade"
               >
                 {p.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -74,7 +84,8 @@ export function IdentityOnboarding({ people }: { people: Person[] }) {
         <button
           type="button"
           disabled={isPending}
-          className="mt-3 flex w-full items-center gap-3 rounded-[10px] border border-dashed border-rule px-3 py-2.5 text-left text-[13px] text-muted transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ animationDelay: `${240 + people.length * 35}ms` }}
+          className="mt-3 flex w-full items-center gap-3 rounded-[10px] border border-dashed border-rule px-3 py-2.5 text-left text-[13px] text-muted transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 animate-blur-fade"
         >
           <span className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-rule text-[16px] font-medium text-faint shrink-0">
             +

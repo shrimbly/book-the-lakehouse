@@ -15,6 +15,7 @@
   --animate-avatar-pop: avatar-pop 160ms cubic-bezier(0.32, 0.72, 0.4, 1) both;
   --animate-toast-pop: toast-pop 240ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   --animate-backdrop-fade: backdrop-fade 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  --animate-blur-fade: blur-fade 720ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 
 html, body {
@@ -41,4 +42,9 @@ html, body {
 @keyframes backdrop-fade {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes blur-fade {
+  from { opacity: 0; filter: blur(10px); transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
 }

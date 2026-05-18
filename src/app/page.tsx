@@ -49,7 +49,10 @@ export default async function Home({
         </div>
 
         <header className="mb-6 sm:mb-8 grid grid-cols-[1fr_auto] items-end gap-4 sm:gap-8">
-          <h1 className="m-0 text-[44px] sm:text-[clamp(72px,12vw,200px)] font-semibold leading-[0.88] tracking-[-0.05em] sm:tracking-[-0.06em]">
+          <h1
+            key={`title-${month}`}
+            className="m-0 text-[44px] sm:text-[clamp(72px,12vw,200px)] font-semibold leading-[0.88] tracking-[-0.05em] sm:tracking-[-0.06em] animate-blur-fade"
+          >
             {MONTH_NAMES[month]}
           </h1>
           <div className="inline-flex items-center gap-2.5 sm:gap-3.5 pb-1 sm:pb-3.5">
@@ -59,7 +62,10 @@ export default async function Home({
             >
               ‹
             </YearArrow>
-            <span className="text-[18px] sm:text-[22px] font-medium tabular-nums tracking-[-0.01em]">
+            <span
+              key={`year-${year}`}
+              className="text-[18px] sm:text-[22px] font-medium tabular-nums tracking-[-0.01em] animate-blur-fade"
+            >
               {year}
             </span>
             <YearArrow href={monthHref(year + 1, month)} label="next year">
@@ -87,14 +93,16 @@ export default async function Home({
           })}
         </nav>
 
-        <Calendar
-          year={year}
-          month={month}
-          initialBookings={bookings}
-          people={people}
-          meId={me.id}
-          today={today}
-        />
+        <div key={`cal-${year}-${month}`} className="animate-blur-fade">
+          <Calendar
+            year={year}
+            month={month}
+            initialBookings={bookings}
+            people={people}
+            meId={me.id}
+            today={today}
+          />
+        </div>
 
         <footer className="mt-16 sm:mt-24 flex items-center justify-center text-[12px] text-muted">
           <span
