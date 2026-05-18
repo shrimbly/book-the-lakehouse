@@ -4,7 +4,7 @@ import { and, eq, ne, lte, gte } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
-import { bookings, people } from "@/db/schema";
+import { bookings, people, photos } from "@/db/schema";
 import { IDENTITY_COOKIE, getCurrentIdentityId } from "@/lib/identity";
 import { GATE_COOKIE } from "@/lib/gate";
 import { isPaletteColor } from "@/lib/palette";
@@ -265,6 +265,85 @@ export async function uploadProfileImage(
 
   revalidatePath("/");
   return { url: blob.url };
+}
+
+export async function uploadStayPhoto(
+  bookingId: string,
+  formData: FormData,
+): Promise<{ id: string; url: string } | { error: string }> {
+  const me = await getCurrentIdentityId();
+  if (!me) return { error: "Not signed in" };
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return { error: "Photo upload isn't configured" };
+  }
+
+  const ownerRows = await db
+    .select({ personId: bookings.personId })
+    .from(bookings)
+    .where(eq(bookings.id, bookingId))
+    .limit(1);
+  if (ownerRows.length === 0) return { error: "Booking not found" };
+  if (ownerRows[0].personId !== me) return { error: "Not your booking" };
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "No file received" };
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return { error: "Image must be jpeg, png, webp, or gif" };
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { error: "Image must be under 5 MB" };
+  }
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const safeExt = /^[a-z0-9]{1,8}$/.test(ext) ? ext : "jpg";
+  const blob = await put(
+    `stays/${bookingId}/${Date.now()}.${safeExt}`,
+    file,
+    {
+      access: "public",
+      addRandomSuffix: true,
+      contentType: file.type,
+    },
+  );
+
+  const id = crypto.randomUUID();
+  await db.insert(photos).values({
+    id,
+    bookingId,
+    uploaderId: me,
+    url: blob.url,
+  });
+
+  revalidatePath("/");
+  return { id, url: blob.url };
+}
+
+export async function deleteStayPhoto(
+  photoId: string,
+): Promise<{ ok: true } | { error: string }> {
+  const me = await getCurrentIdentityId();
+  if (!me) return { error: "Not signed in" };
+
+  const rows = await db
+    .select({ uploaderId: photos.uploaderId, url: photos.url })
+    .from(photos)
+    .where(eq(photos.id, photoId))
+    .limit(1);
+  if (rows.length === 0) return { error: "Photo not found" };
+  if (rows[0].uploaderId !== me) return { error: "Not your photo" };
+
+  await db.delete(photos).where(eq(photos.id, photoId));
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      await del(rows[0].url);
+    } catch {
+      // ignore
+    }
+  }
+
+  revalidatePath("/");
+  return { ok: true };
 }
 
 export async function removeProfileImage(): Promise<{ ok: true } | { error: string }> {

@@ -2,14 +2,26 @@
 
 import { useEffect, useMemo, useOptimistic, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import type { Booking, Person } from "@/lib/data";
+import type { Booking, Person, Photo } from "@/lib/data";
 import { DOW_MON_FIRST, buildMonthCells } from "@/lib/calendar";
-import { createBooking, deleteBooking, updateBooking } from "@/app/actions";
+import {
+  createBooking,
+  deleteBooking,
+  updateBooking,
+  uploadStayPhoto,
+  deleteStayPhoto,
+} from "@/app/actions";
+import { PhotoSheet } from "./PhotoSheet";
 
 type OptimisticAction =
   | { type: "add"; booking: Booking }
   | { type: "remove"; id: string }
   | { type: "update"; booking: Booking };
+
+type PhotoAction =
+  | { type: "add"; photo: Photo }
+  | { type: "remove"; id: string }
+  | { type: "replace"; tempId: string; photo: Photo };
 
 const MONTH_SHORT = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -58,6 +70,7 @@ export function Calendar({
   year,
   month,
   initialBookings,
+  initialPhotos,
   people,
   meId,
   today,
@@ -65,6 +78,7 @@ export function Calendar({
   year: number;
   month: number;
   initialBookings: Booking[];
+  initialPhotos: Photo[];
   people: Person[];
   meId: string;
   today: string;
@@ -78,6 +92,10 @@ export function Calendar({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [photoSheetBookingId, setPhotoSheetBookingId] = useState<string | null>(
+    null,
+  );
+  const [photoPending, setPhotoPending] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -90,6 +108,19 @@ export function Calendar({
     if (action.type === "remove") return state.filter((b) => b.id !== action.id);
     if (action.type === "update") {
       return state.map((b) => (b.id === action.booking.id ? action.booking : b));
+    }
+    return state;
+  });
+
+  const [optimisticPhotos, dispatchPhotos] = useOptimistic<
+    Photo[],
+    PhotoAction
+  >(initialPhotos, (state, action) => {
+    if (action.type === "add") return [...state, action.photo];
+    if (action.type === "remove")
+      return state.filter((p) => p.id !== action.id);
+    if (action.type === "replace") {
+      return state.map((p) => (p.id === action.tempId ? action.photo : p));
     }
     return state;
   });
@@ -383,6 +414,61 @@ export function Calendar({
     return !rangeOverlapsBookings(pickStart, newEnd, allBookings, editingId);
   }
 
+  function handleUploadPhoto(bookingId: string, file: File) {
+    setServerError(null);
+    setPhotoPending(true);
+    const tempId = `tmp-${crypto.randomUUID()}`;
+    const tempUrl = URL.createObjectURL(file);
+    startTransition(async () => {
+      dispatchPhotos({
+        type: "add",
+        photo: {
+          id: tempId,
+          bookingId,
+          uploaderId: meId,
+          url: tempUrl,
+          caption: null,
+          createdAt: new Date().toISOString(),
+        },
+      });
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await uploadStayPhoto(bookingId, fd);
+      setPhotoPending(false);
+      if ("error" in result) {
+        setServerError(result.error);
+        dispatchPhotos({ type: "remove", id: tempId });
+      } else {
+        dispatchPhotos({
+          type: "replace",
+          tempId,
+          photo: {
+            id: result.id,
+            bookingId,
+            uploaderId: meId,
+            url: result.url,
+            caption: null,
+            createdAt: new Date().toISOString(),
+          },
+        });
+      }
+      URL.revokeObjectURL(tempUrl);
+    });
+  }
+
+  function handleDeletePhoto(photoId: string) {
+    setServerError(null);
+    setPhotoPending(true);
+    startTransition(async () => {
+      dispatchPhotos({ type: "remove", id: photoId });
+      const result = await deleteStayPhoto(photoId);
+      setPhotoPending(false);
+      if ("error" in result) {
+        setServerError(result.error);
+      }
+    });
+  }
+
   function confirmDelete() {
     if (!deletingId) return;
     const id = deletingId;
@@ -503,7 +589,7 @@ export function Calendar({
                 touchAction: "none",
               }}
               className={[
-                "relative min-h-[68px] sm:min-h-[104px] border-t border-soft px-2 pt-2 pb-1.5 sm:px-3 sm:pt-3.5 sm:pb-3",
+                "relative min-h-[68px] sm:min-h-[84px] border-t border-soft px-2 pt-2 pb-1.5 sm:px-3 sm:pt-2.5 sm:pb-2.5",
                 interactive ? "cursor-pointer" : "",
                 showGhost ? "group" : "",
               ].join(" ")}
@@ -708,6 +794,10 @@ export function Calendar({
                     optimisticBookings.find((b) => b.id === actioningId) ?? null
                   }
                   person={me}
+                  photoCount={
+                    optimisticPhotos.filter((p) => p.bookingId === actioningId)
+                      .length
+                  }
                   onCancel={() => setActioningId(null)}
                   onEdit={() => {
                     const b = optimisticBookings.find(
@@ -723,6 +813,10 @@ export function Calendar({
                     setDeletingId(actioningId);
                     setActioningId(null);
                   }}
+                  onPhotos={() => {
+                    setPhotoSheetBookingId(actioningId);
+                    setActioningId(null);
+                  }}
                 />
               ) : deletingId ? (
                 <DeleteBar
@@ -736,8 +830,35 @@ export function Calendar({
                 />
               ) : null}
 
+              {photoSheetBookingId
+                ? (() => {
+                    const b = optimisticBookings.find(
+                      (x) => x.id === photoSheetBookingId,
+                    );
+                    if (!b) return null;
+                    const owner = people.find((p) => p.id === b.personId);
+                    if (!owner) return null;
+                    const bookingPhotos = optimisticPhotos.filter(
+                      (p) => p.bookingId === b.id,
+                    );
+                    return (
+                      <PhotoSheet
+                        booking={b}
+                        person={owner}
+                        photos={bookingPhotos}
+                        canUpload={owner.id === meId}
+                        meId={meId}
+                        pending={photoPending}
+                        onClose={() => setPhotoSheetBookingId(null)}
+                        onUpload={(file) => handleUploadPhoto(b.id, file)}
+                        onDelete={(id) => handleDeletePhoto(id)}
+                      />
+                    );
+                  })()
+                : null}
+
               {serverError ? (
-                <div className="fixed top-4 right-4 z-40 flex items-center gap-3 rounded-[10px] border border-rule bg-paper px-4 py-2.5 text-[12px] text-ink shadow-[0_8px_24px_-8px_rgba(60,40,20,0.18)]">
+                <div className="fixed top-4 right-4 z-[70] flex items-center gap-3 rounded-[10px] border border-rule bg-paper px-4 py-2.5 text-[12px] text-ink shadow-[0_8px_24px_-8px_rgba(60,40,20,0.18)]">
                   <span>{serverError}</span>
                   <button
                     type="button"
@@ -1046,15 +1167,19 @@ function PersonChip({ person }: { person: Person }) {
 function ChoiceBar({
   booking,
   person,
+  photoCount,
   onCancel,
   onEdit,
   onDelete,
+  onPhotos,
 }: {
   booking: Booking | null;
   person: Person;
+  photoCount: number;
   onCancel: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onPhotos: () => void;
 }) {
   if (!booking) return null;
   const sameDay = booking.start === booking.end;
@@ -1090,7 +1215,7 @@ function ChoiceBar({
               your stay · {person.first}
             </span>
           </div>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-1">
             <button
               type="button"
               onClick={onCancel}
@@ -1104,6 +1229,16 @@ function ChoiceBar({
               className="rounded-full border border-rule px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium text-ink transition-colors hover:border-ink"
             >
               Delete
+            </button>
+            <button
+              type="button"
+              onClick={onPhotos}
+              className="rounded-full border border-rule px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium text-ink transition-colors hover:border-ink"
+            >
+              Photos
+              {photoCount > 0 ? (
+                <span className="ml-1.5 text-muted">{photoCount}</span>
+              ) : null}
             </button>
             <button
               type="button"

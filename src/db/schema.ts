@@ -25,5 +25,26 @@ export const bookings = pgTable(
   ],
 );
 
+export const photos = pgTable(
+  "photos",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    bookingId: varchar("booking_id", { length: 64 })
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+    uploaderId: varchar("uploader_id", { length: 64 })
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    caption: text("caption"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("photos_booking_idx").on(t.bookingId),
+    index("photos_uploader_idx").on(t.uploaderId),
+  ],
+);
+
 export type PersonRow = typeof people.$inferSelect;
 export type BookingRow = typeof bookings.$inferSelect;
+export type PhotoRow = typeof photos.$inferSelect;

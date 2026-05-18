@@ -1,7 +1,7 @@
-import { and, gte, lte } from "drizzle-orm";
+import { and, gte, lte, inArray } from "drizzle-orm";
 import { db } from "./client";
-import { bookings, people } from "./schema";
-import type { Person, Booking } from "@/lib/data";
+import { bookings, people, photos } from "./schema";
+import type { Person, Booking, Photo } from "@/lib/data";
 
 export async function getPeople(): Promise<Person[]> {
   const rows = await db.select().from(people).orderBy(people.createdAt);
@@ -45,5 +45,24 @@ export async function getBookingsForMonth(
     personId: r.personId,
     start: r.startDate,
     end: r.endDate,
+  }));
+}
+
+export async function getPhotosForBookings(
+  bookingIds: string[],
+): Promise<Photo[]> {
+  if (bookingIds.length === 0) return [];
+  const rows = await db
+    .select()
+    .from(photos)
+    .where(inArray(photos.bookingId, bookingIds))
+    .orderBy(photos.createdAt);
+  return rows.map((r) => ({
+    id: r.id,
+    bookingId: r.bookingId,
+    uploaderId: r.uploaderId,
+    url: r.url,
+    caption: r.caption,
+    createdAt: r.createdAt.toISOString(),
   }));
 }

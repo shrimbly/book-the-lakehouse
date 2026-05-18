@@ -13,6 +13,15 @@ export type Booking = {
   end: string;
 };
 
+export type Photo = {
+  id: string;
+  bookingId: string;
+  uploaderId: string;
+  url: string;
+  caption: string | null;
+  createdAt: string;
+};
+
 export const PEOPLE: Person[] = [
   { id: "james", first: "James", initial: "J", color: "#3a4e48", imageUrl: null },
   { id: "margaret", first: "Margaret", initial: "M", color: "#8b6f47", imageUrl: null },
