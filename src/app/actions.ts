@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { bookings, people } from "@/db/schema";
 import { IDENTITY_COOKIE } from "@/lib/identity";
+import { GATE_COOKIE } from "@/lib/gate";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -81,6 +82,39 @@ export async function setIdentity(
 
 export async function clearIdentity(): Promise<{ ok: true }> {
   const c = await cookies();
+  c.delete(IDENTITY_COOKIE);
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function unlockPin(
+  pin: string,
+): Promise<{ ok: true } | { error: string }> {
+  const expected = process.env.FAMILY_PIN;
+  if (!expected) {
+    return { error: "Pin not configured" };
+  }
+  if (!/^\d{4}$/.test(pin)) {
+    return { error: "Pin must be four digits" };
+  }
+  if (pin !== expected) {
+    return { error: "Incorrect pin" };
+  }
+  const c = await cookies();
+  c.set(GATE_COOKIE, "ok", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 90,
+    path: "/",
+  });
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function lockGate(): Promise<{ ok: true }> {
+  const c = await cookies();
+  c.delete(GATE_COOKIE);
   c.delete(IDENTITY_COOKIE);
   revalidatePath("/");
   return { ok: true };

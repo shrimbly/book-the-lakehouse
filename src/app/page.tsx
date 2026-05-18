@@ -2,8 +2,10 @@ import Link from "next/link";
 import { MONTH_NAMES } from "@/lib/calendar";
 import { fetchCalendarData } from "@/lib/data-source";
 import { getCurrentIdentityId } from "@/lib/identity";
+import { isGatePassed } from "@/lib/gate";
 import { IdentityPicker } from "@/components/IdentityPicker";
 import { IdentityOnboarding } from "@/components/IdentityOnboarding";
+import { PinGate } from "@/components/PinGate";
 import { Calendar } from "@/components/Calendar";
 
 function parseMonthParam(value: string | string[] | undefined): [number, number] {
@@ -26,6 +28,11 @@ export default async function Home({
 }) {
   const { m } = await searchParams;
   const [year, month] = parseMonthParam(m);
+
+  if (!(await isGatePassed())) {
+    return <PinGate />;
+  }
+
   const { people, bookings, today } = await fetchCalendarData(year, month);
   const identityId = await getCurrentIdentityId();
   const me = identityId ? people.find((p) => p.id === identityId) : undefined;
