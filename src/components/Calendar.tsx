@@ -761,22 +761,30 @@ function ConfirmBar({
   const [editing, setEditing] = useState(false);
   const sameDay = start === end;
   const canEdit = locked;
+  if (!locked) {
+    return (
+      <div className="pointer-events-none fixed inset-x-0 bottom-10 sm:bottom-14 z-30 flex justify-center px-3 sm:px-4 animate-toast-pop">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="pointer-events-auto rounded-full border border-rule bg-paper px-4 py-1.5 text-[11px] sm:text-[12px] text-muted shadow-[0_8px_24px_-8px_rgba(60,40,20,0.15)] transition-colors hover:text-ink"
+        >
+          Cancel selection
+        </button>
+      </div>
+    );
+  }
   return (
     <>
-      {locked ? (
-        <div
-          aria-hidden
-          onClick={onCancel}
-          className="fixed inset-0 z-20 bg-ink/35 animate-backdrop-fade"
-        />
-      ) : null}
+      <div
+        aria-hidden
+        onClick={onCancel}
+        className="fixed inset-0 z-20 bg-ink/35 animate-backdrop-fade"
+      />
       <div className="pointer-events-none fixed inset-x-0 bottom-10 sm:bottom-14 z-30 flex justify-center px-3 sm:px-4 animate-toast-pop">
         <div
           className={[
-            "flex w-full flex-col rounded-[12px] sm:rounded-[14px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)] max-w-[calc(100vw-1.5rem)] sm:w-[480px] origin-bottom transition-transform duration-500 ease-out",
-            locked
-              ? "pointer-events-auto -translate-y-3 scale-[1.035]"
-              : "pointer-events-none translate-y-0 scale-100",
+            "pointer-events-auto flex w-full flex-col rounded-[12px] sm:rounded-[14px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)] max-w-[calc(100vw-1.5rem)] sm:w-[480px] origin-bottom transition-transform duration-500 ease-out -translate-y-3 scale-[1.035]",
           ].join(" ")}
         >
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-4 px-3 py-2.5 sm:px-4 sm:py-3">
