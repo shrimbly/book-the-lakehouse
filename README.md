@@ -45,6 +45,17 @@ hard to double-book, and calm enough that everyone can use it.
 | Database optional locally | Run with seeded in-memory demo data until you connect Neon. |
 | Spreadsheet migration | Use the scripts in `scripts/` to inspect, parse, and import `.xlsx` calendars. |
 
+## Simple Setup
+
+The easiest production setup is Vercel + Neon:
+
+1. Fork and clone this repo.
+2. Create a [Vercel](https://vercel.com/pricing) project from your fork. The Hobby plan is a good starting point for personal use.
+3. Add the [Neon integration for Vercel](https://vercel.com/marketplace/neon). It creates the Postgres database and wires the database environment variables for you. Neon's Free plan is fine for getting started.
+4. Add the [Vercel Blob integration](https://vercel.com/docs/storage/vercel-blob) if you want profile photos and stay photos. Vercel handles the Blob environment variable too.
+5. Add your app-specific settings from `.env.example`, especially `FAMILY_PIN` and the `NEXT_PUBLIC_*` display text.
+6. Run `npm run db:push` once, then `npm run db:seed` to add starter people and sample bookings.
+
 ## Getting Started
 
 ### Prerequisites
@@ -68,17 +79,6 @@ Open [http://localhost:3000](http://localhost:3000).
 
 With only `.env.example` copied, the app can render with demo data. Add
 `DATABASE_URL` when you are ready to persist people, bookings, and photos.
-
-## Simple Setup
-
-The intended production setup is Vercel + Neon:
-
-1. Fork or clone this repo.
-2. Create a [Neon](https://neon.com/pricing) Postgres project. The Free plan is enough to get started for a family calendar.
-3. Create a [Vercel](https://vercel.com/pricing) project from the repo. The Hobby plan is a good starting point for personal use.
-4. Add `DATABASE_URL`, `FAMILY_PIN`, and the `NEXT_PUBLIC_*` settings from `.env.example` in Vercel.
-5. Optional: add `BLOB_READ_WRITE_TOKEN` if you want profile photos and stay photos.
-6. Run `npm run db:push` once, then `npm run db:seed` to add starter people and sample bookings.
 
 ## Environment Variables
 
