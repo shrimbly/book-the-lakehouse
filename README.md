@@ -10,6 +10,8 @@
 
 </div>
 
+<br>
+
 Simple shared availability for the places families pass between each other.
 No marketplace, no payments, no accounts to administer. Just a private calendar,
 a shared PIN, and enough personality to feel like it belongs to your people.
