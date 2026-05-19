@@ -4,8 +4,6 @@
 
 <div align="center">
 
-# Book the lakehouse
-
 ### A tiny, beautiful, and low-cost booking calendar for the family lakehouse or holiday home.
 
 Simple shared availability for the places families pass between each other.  
