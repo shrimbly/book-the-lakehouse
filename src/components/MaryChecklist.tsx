@@ -78,15 +78,15 @@ export function MaryChecklist({
         </p>
       ) : null}
       <StaySection
-        title="Upcoming stays"
-        stays={futureStays}
+        title="Past stays"
+        stays={pastStays}
         savingId={savingId}
         isPending={isPending}
         onToggle={toggle}
       />
       <StaySection
-        title="Past stays"
-        stays={pastStays}
+        title="Upcoming stays"
+        stays={futureStays}
         savingId={savingId}
         isPending={isPending}
         onToggle={toggle}
