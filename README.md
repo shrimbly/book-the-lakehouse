@@ -1,20 +1,26 @@
 <p align="center">
-  <img src="./public/calendar-hero.png" alt="Booking Calendar month view" width="100%">
+  <img src="./public/calendar-hero.png" alt="Book the lakehouse month view" width="100%">
 </p>
 
-### A tiny, beautiful booking calendar for a family bach, cabin, cottage, lake house, or holiday home.
+<div align="center">
 
-Simple shared availability for the places families pass between each other.
+# Book the lakehouse
+
+### A tiny, beautiful booking calendar for a family bach, cabin, cottage, lakehouse, or holiday home.
+
+Simple shared availability for the places families pass between each other.  
 No marketplace, no payments, no accounts to administer. Just a private calendar,
 a shared PIN, and enough personality to feel like it belongs to your people.
 
 [MIT licensed](./LICENSE) · built with Next.js, React, Drizzle, Neon, and Vercel Blob
 
+</div>
+
 ## What It Does
 
-Booking Calendar is a family-first stay planner. People pick who they are, claim
+Book the lakehouse is a family-first stay planner. People pick who they are, claim
 dates on a large month view, drag or resize their own stays, and add small photos
-from the trip. It is designed for the informal rhythm of a bach: quick to check,
+from the trip. It is designed for the informal rhythm of a shared home: quick to check,
 hard to double-book, and calm enough that everyone can use it.
 
 - Shared PIN gate for lightweight family privacy
@@ -71,13 +77,13 @@ FAMILY_PIN=1234
 DATABASE_URL=postgres://...
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
 
-NEXT_PUBLIC_HOME_NAME="Lake House Calendar"
-NEXT_PUBLIC_HOME_KIND="lake house"
+NEXT_PUBLIC_HOME_NAME="Book the lakehouse"
+NEXT_PUBLIC_HOME_KIND=lakehouse
 NEXT_PUBLIC_BUILT_BY="Your Name"
-NEXT_PUBLIC_SITE_DESCRIPTION="Family booking calendar for the lake house."
-NEXT_PUBLIC_FOOTER_TEXT="Book the lake house"
-NEXT_PUBLIC_HOME_SLUG=lake-house
-COOKIE_PREFIX=lake-house
+NEXT_PUBLIC_SITE_DESCRIPTION="A private family booking calendar for the lakehouse."
+NEXT_PUBLIC_FOOTER_TEXT="Book the lakehouse"
+NEXT_PUBLIC_HOME_SLUG=book-the-lakehouse
+COOKIE_PREFIX=book-the-lakehouse
 ```
 
 Only `FAMILY_PIN` is required for the PIN gate. `DATABASE_URL` enables the real

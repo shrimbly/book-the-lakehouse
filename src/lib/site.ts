@@ -1,5 +1,5 @@
-const fallbackName = "Kuratau Bach";
-const fallbackHomeKind = "bach";
+const fallbackName = "Book the lakehouse";
+const fallbackHomeKind = "lakehouse";
 const fallbackBuilderName = "Willie";
 
 function fromEnv(value: string | undefined, fallback: string): string {
@@ -32,7 +32,7 @@ export const siteBuilderName = fromEnv(
 
 export const siteDescription = fromEnv(
   process.env.NEXT_PUBLIC_SITE_DESCRIPTION,
-  `Family booking calendar for ${siteName}.`,
+  "A private family booking calendar for the lakehouse.",
 );
 
 export const siteFooterText = fromEnv(
