@@ -7,6 +7,8 @@ import { IdentityPicker } from "@/components/IdentityPicker";
 import { IdentityOnboarding } from "@/components/IdentityOnboarding";
 import { PinGate } from "@/components/PinGate";
 import { Calendar } from "@/components/Calendar";
+import { MonthSwiper } from "@/components/MonthSwiper";
+import { MonthTitle } from "@/components/MonthTitle";
 
 function parseMonthParam(value: string | string[] | undefined): [number, number] {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -43,18 +45,18 @@ export default async function Home({
 
   return (
     <main className="flex-1 px-4 sm:px-10 pt-4 sm:pt-8 pb-24 sm:pb-20">
+      <MonthSwiper year={year} month={month} />
       <div className="mx-auto max-w-[1200px]">
         <div className="mb-4 sm:-mb-2 flex items-center justify-end gap-3">
           <IdentityPicker people={people} currentId={me.id} />
         </div>
 
         <header className="mb-6 sm:mb-6 grid grid-cols-[1fr_auto] items-end gap-4 sm:gap-8">
-          <h1
-            key={`title-${month}`}
-            className="m-0 text-[44px] sm:text-[clamp(60px,9vw,140px)] font-semibold leading-[0.88] tracking-[-0.05em] sm:tracking-[-0.06em] animate-blur-fade"
-          >
-            {MONTH_NAMES[month]}
-          </h1>
+          <MonthTitle
+            month={month}
+            months={MONTH_NAMES}
+            className="text-[44px] sm:text-[clamp(60px,9vw,140px)] font-semibold leading-[0.88] tracking-[-0.05em] sm:tracking-[-0.06em]"
+          />
           <div className="inline-flex items-center gap-2.5 sm:gap-3.5 pb-1 sm:pb-3.5">
             <YearArrow
               href={monthHref(year - 1, month)}
@@ -74,7 +76,7 @@ export default async function Home({
           </div>
         </header>
 
-        <nav className="mb-6 sm:mb-10 flex items-center justify-between gap-1 border-b border-soft pb-3 sm:pb-5 text-[13px] sm:text-[12px] overflow-x-auto">
+        <nav className="mb-0 sm:mb-0 flex items-center justify-between gap-1 pb-2 sm:pb-2 text-[13px] sm:text-[12px] overflow-x-auto">
           {MONTH_NAMES.map((name, idx) => {
             const isCurrent = idx === month;
             return (

@@ -12,6 +12,7 @@ import {
   deleteStayPhoto,
 } from "@/app/actions";
 import { PhotoSheet } from "./PhotoSheet";
+import { processImage } from "@/lib/image";
 
 type OptimisticAction =
   | { type: "add"; booking: Booking }
@@ -92,9 +93,11 @@ export function Calendar({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [photoSheetBookingId, setPhotoSheetBookingId] = useState<string | null>(
-    null,
-  );
+  const [photoContext, setPhotoContext] = useState<{
+    bookingId: string;
+    date: string;
+    mode: "view" | "upload";
+  } | null>(null);
   const [photoPending, setPhotoPending] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -237,17 +240,48 @@ export function Calendar({
       const firstCellIso = bookingCells[0].iso;
       const lastCellIso = bookingCells[bookingCells.length - 1].iso;
       // Avatar + name render on the first VISIBLE row of the booking, even if
-      // the booking actually started in the previous month. The rounded-left
-      // cap stays tied to the real booking start.
+      // the booking actually started in the previous month.
       bookingRows[0].isBookingStart = true;
-      bookingRows[0].roundLeft = firstCellIso === booking.start;
-      bookingRows[bookingRows.length - 1].roundRight =
-        lastCellIso === booking.end;
+      // Each row segment is a self-contained ribbon, so round both ends by
+      // default. The only hard edges are where the booking continues
+      // off-screen (i.e., started in or extends into another month).
+      bookingRows.forEach((br) => {
+        br.roundLeft = true;
+        br.roundRight = true;
+      });
+      if (firstCellIso !== booking.start) {
+        bookingRows[0].roundLeft = false;
+      }
+      if (lastCellIso !== booking.end) {
+        bookingRows[bookingRows.length - 1].roundRight = false;
+      }
 
       allRows.push(...bookingRows);
     });
     return allRows;
   }, [allBookings, cells, people, editingId]);
+
+  const photosByDate = useMemo(() => {
+    const map = new Map<string, Photo[]>();
+    for (const p of optimisticPhotos) {
+      const list = map.get(p.date) ?? [];
+      list.push(p);
+      map.set(p.date, list);
+    }
+    return map;
+  }, [optimisticPhotos]);
+
+  // For each booking, the iso of the first cell visible in this month —
+  // that cell hosts the avatar, so any photo thumbnail there must shift
+  // right to clear it.
+  const firstVisibleCellByBooking = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of cells) {
+      if (!c.inMonth || !c.booking) continue;
+      if (!m.has(c.booking.id)) m.set(c.booking.id, c.iso);
+    }
+    return m;
+  }, [cells]);
 
   const previewRows = useMemo<RowRibbon[]>(() => {
     if (!preview) return [];
@@ -414,45 +448,78 @@ export function Calendar({
     return !rangeOverlapsBookings(pickStart, newEnd, allBookings, editingId);
   }
 
-  function handleUploadPhoto(bookingId: string, file: File) {
+  function handleUploadPhoto(bookingId: string, date: string, file: File) {
     setServerError(null);
     setPhotoPending(true);
-    const tempId = `tmp-${crypto.randomUUID()}`;
-    const tempUrl = URL.createObjectURL(file);
     startTransition(async () => {
+      let processed;
+      try {
+        processed = await processImage(file);
+      } catch {
+        setPhotoPending(false);
+        setServerError("Couldn't read that image");
+        return;
+      }
+
+      const tempId = `tmp-${crypto.randomUUID()}`;
+      const tempThumb = URL.createObjectURL(processed.thumbnail);
+      const tempFull = URL.createObjectURL(processed.full);
+
       dispatchPhotos({
         type: "add",
         photo: {
           id: tempId,
           bookingId,
           uploaderId: meId,
-          url: tempUrl,
+          date,
+          url: tempFull,
+          thumbnailUrl: tempThumb,
           caption: null,
           createdAt: new Date().toISOString(),
         },
       });
+
       const fd = new FormData();
-      fd.append("file", file);
-      const result = await uploadStayPhoto(bookingId, fd);
-      setPhotoPending(false);
-      if ("error" in result) {
-        setServerError(result.error);
+      fd.append(
+        "file",
+        new File([processed.full], "photo.jpg", { type: "image/jpeg" }),
+      );
+      fd.append(
+        "thumbnail",
+        new File([processed.thumbnail], "photo-thumb.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+
+      try {
+        const result = await uploadStayPhoto(bookingId, date, fd);
+        setPhotoPending(false);
+        if ("error" in result) {
+          setServerError(result.error);
+          dispatchPhotos({ type: "remove", id: tempId });
+        } else {
+          dispatchPhotos({
+            type: "replace",
+            tempId,
+            photo: {
+              id: result.id,
+              bookingId,
+              uploaderId: meId,
+              date,
+              url: result.url,
+              thumbnailUrl: result.thumbnailUrl,
+              caption: null,
+              createdAt: new Date().toISOString(),
+            },
+          });
+        }
+      } catch {
+        setPhotoPending(false);
+        setServerError("Upload failed — please try again");
         dispatchPhotos({ type: "remove", id: tempId });
-      } else {
-        dispatchPhotos({
-          type: "replace",
-          tempId,
-          photo: {
-            id: result.id,
-            bookingId,
-            uploaderId: meId,
-            url: result.url,
-            caption: null,
-            createdAt: new Date().toISOString(),
-          },
-        });
       }
-      URL.revokeObjectURL(tempUrl);
+      URL.revokeObjectURL(tempThumb);
+      URL.revokeObjectURL(tempFull);
     });
   }
 
@@ -569,6 +636,14 @@ export function Calendar({
             c.iso <= preview.end;
           const interactive = c.inMonth && !real && !pickEnd;
           const showGhost = interactive && !inPreview;
+          const dayPhotos = photosByDate.get(c.iso) ?? [];
+          const photoCount = dayPhotos.length;
+          const isOwnBookingCell = real?.person.id === meId;
+          const showThumbStack = !!real && photoCount > 0 && !pickStart;
+          const showAddBadge =
+            !!real && isOwnBookingCell && !pickStart;
+          const isFirstBookingCell =
+            !!real && firstVisibleCellByBooking.get(real.id) === c.iso;
 
           return (
             <div
@@ -591,7 +666,7 @@ export function Calendar({
               className={[
                 "relative min-h-[68px] sm:min-h-[84px] border-t border-soft px-2 pt-2 pb-1.5 sm:px-3 sm:pt-2.5 sm:pb-2.5",
                 interactive ? "cursor-pointer" : "",
-                showGhost ? "group" : "",
+                showGhost || showAddBadge ? "group" : "",
               ].join(" ")}
             >
               <span
@@ -614,6 +689,61 @@ export function Calendar({
                 <div className="pointer-events-none absolute bottom-1.5 sm:bottom-2.5 left-1 right-1 sm:left-1.5 sm:right-1.5 flex h-[20px] sm:h-[26px] items-center justify-center rounded-[5px] sm:rounded-[6px] border border-dashed border-rule text-[12px] sm:text-[14px] leading-none text-faint opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                   +
                 </div>
+              ) : null}
+
+              {showThumbStack && real ? (
+                <PhotoStack
+                  photos={dayPhotos}
+                  offsetForAvatar={isFirstBookingCell}
+                  onOpen={() => {
+                    // Desktop (hover-capable) → go straight to the lightbox.
+                    // Touch devices still get the gallery so they have an
+                    // entry point for adding more photos.
+                    const isHoverDevice =
+                      typeof window !== "undefined" &&
+                      window.matchMedia(
+                        "(hover: hover) and (pointer: fine)",
+                      ).matches;
+                    setPhotoContext({
+                      bookingId: real.id,
+                      date: c.iso,
+                      mode: isHoverDevice ? "view" : "upload",
+                    });
+                  }}
+                />
+              ) : null}
+
+              {showAddBadge && real ? (
+                <button
+                  type="button"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setPhotoContext({
+                      bookingId: real.id,
+                      date: c.iso,
+                      mode: "upload",
+                    });
+                  }}
+                  aria-label="Add a photo for this day"
+                  className={[
+                    "absolute z-[9] place-items-center rounded-[4px] sm:rounded-[5px] border border-dashed border-rule bg-paper/85 text-[12px] leading-none text-faint opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:border-ink hover:text-ink",
+                    // When the stack is present, only show on desktop hover
+                    // and place to the right of the stack with breathing room.
+                    showThumbStack
+                      ? "max-sm:hidden grid h-[30px] w-[30px] bottom-[42px]"
+                      : "grid h-[22px] w-[22px] sm:h-[26px] sm:w-[26px] bottom-[30px] sm:bottom-[40px]",
+                    showThumbStack
+                      ? isFirstBookingCell
+                        ? "sm:left-[88px]"
+                        : "sm:left-[78px]"
+                      : isFirstBookingCell
+                        ? "left-[34px] sm:left-[44px]"
+                        : "left-[26px] sm:left-[34px]",
+                  ].join(" ")}
+                >
+                  +
+                </button>
               ) : null}
             </div>
           );
@@ -706,31 +836,35 @@ export function Calendar({
 
         {previewRows.map((rr, i) => (
           <div
-            key={`pr-${rr.startCellIso}`}
-            className={[
-              "pointer-events-none z-[5] flex h-[20px] sm:h-[26px] origin-left items-center self-end overflow-hidden text-[10px] sm:text-[11px] font-medium tracking-[-0.005em] opacity-70 animate-ribbon-grow mb-1.5 sm:mb-2.5 pr-1.5 sm:pr-2",
-              i === 0 ? "pl-[30px] sm:pl-[42px]" : "pl-1.5 sm:pl-2",
-              rr.roundLeft ? "ml-1 sm:ml-1.5" : "",
-              rr.roundRight ? "mr-1 sm:mr-1.5" : "",
-              rr.roundLeft && rr.roundRight
-                ? "rounded-[5px] sm:rounded-[6px]"
-                : rr.roundLeft
-                  ? "rounded-l-[5px] sm:rounded-l-[6px]"
-                  : rr.roundRight
-                    ? "rounded-r-[5px] sm:rounded-r-[6px]"
-                    : "",
-            ].join(" ")}
-            style={{
-              gridColumn: `${rr.startCol} / ${rr.endCol}`,
-              gridRow: rr.gridRow,
-              backgroundColor: `color-mix(in srgb, ${me.color} 22%, var(--color-paper) 78%)`,
-              color: `color-mix(in srgb, ${me.color} 92%, var(--color-ink) 8%)`,
-              animationDelay: `${i * 130}ms`,
-            }}
+            key={`pr-track-${rr.gridRow}`}
+            style={{ gridRow: rr.gridRow, gridColumn: "1 / 8" }}
+            className="pointer-events-none relative"
           >
-            {i === 0 ? (
-              <span className="block truncate">{me.first}</span>
-            ) : null}
+            <div
+              className={[
+                "preview-ribbon-fill absolute bottom-1.5 sm:bottom-2.5 z-[5] flex h-[20px] sm:h-[26px] items-center overflow-hidden text-[10px] sm:text-[11px] font-medium tracking-[-0.005em] opacity-70 pr-1.5 sm:pr-2",
+                i === 0 ? "pl-[30px] sm:pl-[42px]" : "pl-1.5 sm:pl-2",
+                rr.roundLeft && rr.roundRight
+                  ? "rounded-[5px] sm:rounded-[6px]"
+                  : rr.roundLeft
+                    ? "rounded-l-[5px] sm:rounded-l-[6px]"
+                    : rr.roundRight
+                      ? "rounded-r-[5px] sm:rounded-r-[6px]"
+                      : "",
+              ].join(" ")}
+              style={{
+                ["--rl" as string]: `${((rr.startCol - 1) / 7) * 100}%`,
+                ["--rw" as string]: `${((rr.endCol - rr.startCol) / 7) * 100}%`,
+                ["--ol" as string]: rr.roundLeft ? 1 : 0,
+                ["--or" as string]: rr.roundRight ? 1 : 0,
+                backgroundColor: `color-mix(in srgb, ${me.color} 22%, var(--color-paper) 78%)`,
+                color: `color-mix(in srgb, ${me.color} 92%, var(--color-ink) 8%)`,
+              }}
+            >
+              {i === 0 ? (
+                <span className="block truncate">{me.first}</span>
+              ) : null}
+            </div>
           </div>
         ))}
 
@@ -794,10 +928,6 @@ export function Calendar({
                     optimisticBookings.find((b) => b.id === actioningId) ?? null
                   }
                   person={me}
-                  photoCount={
-                    optimisticPhotos.filter((p) => p.bookingId === actioningId)
-                      .length
-                  }
                   onCancel={() => setActioningId(null)}
                   onEdit={() => {
                     const b = optimisticBookings.find(
@@ -813,10 +943,6 @@ export function Calendar({
                     setDeletingId(actioningId);
                     setActioningId(null);
                   }}
-                  onPhotos={() => {
-                    setPhotoSheetBookingId(actioningId);
-                    setActioningId(null);
-                  }}
                 />
               ) : deletingId ? (
                 <DeleteBar
@@ -830,27 +956,32 @@ export function Calendar({
                 />
               ) : null}
 
-              {photoSheetBookingId
+              {photoContext
                 ? (() => {
                     const b = optimisticBookings.find(
-                      (x) => x.id === photoSheetBookingId,
+                      (x) => x.id === photoContext.bookingId,
                     );
                     if (!b) return null;
                     const owner = people.find((p) => p.id === b.personId);
                     if (!owner) return null;
-                    const bookingPhotos = optimisticPhotos.filter(
-                      (p) => p.bookingId === b.id,
+                    const dayPhotos = optimisticPhotos.filter(
+                      (p) =>
+                        p.bookingId === b.id && p.date === photoContext.date,
                     );
                     return (
                       <PhotoSheet
                         booking={b}
+                        date={photoContext.date}
                         person={owner}
-                        photos={bookingPhotos}
+                        photos={dayPhotos}
                         canUpload={owner.id === meId}
                         meId={meId}
                         pending={photoPending}
-                        onClose={() => setPhotoSheetBookingId(null)}
-                        onUpload={(file) => handleUploadPhoto(b.id, file)}
+                        initialLightbox={photoContext.mode === "view"}
+                        onClose={() => setPhotoContext(null)}
+                        onUpload={(file) =>
+                          handleUploadPhoto(b.id, photoContext.date, file)
+                        }
                         onDelete={(id) => handleDeletePhoto(id)}
                       />
                     );
@@ -1022,7 +1153,7 @@ function ConfirmBar({
                 className={[
                   "rounded-full border px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium transition-colors",
                   editing
-                    ? "border-ink bg-ink text-paper"
+                    ? "border-ink bg-soft text-ink"
                     : "border-rule text-ink hover:border-ink",
                 ].join(" ")}
               >
@@ -1164,22 +1295,71 @@ function PersonChip({ person }: { person: Person }) {
   );
 }
 
+function PhotoStack({
+  photos,
+  offsetForAvatar,
+  onOpen,
+}: {
+  photos: Photo[];
+  offsetForAvatar?: boolean;
+  onOpen: () => void;
+}) {
+  const first = photos[0];
+  const hasMore = photos.length > 1;
+  return (
+    <button
+      type="button"
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onOpen();
+      }}
+      aria-label={`View ${photos.length} photo${photos.length === 1 ? "" : "s"}`}
+      className={[
+        "absolute z-[9] block h-[26px] w-[26px] sm:h-[32px] sm:w-[32px]",
+        "bottom-[30px] sm:bottom-[40px]",
+        offsetForAvatar
+          ? "left-[34px] sm:left-[44px]"
+          : "left-[26px] sm:left-[34px]",
+      ].join(" ")}
+    >
+      {hasMore ? (
+        <span
+          aria-hidden
+          className="absolute inset-0 translate-x-[7px] scale-[0.92] rounded-[4px] sm:rounded-[5px] border border-paper bg-soft shadow-[0_2px_4px_-1px_rgba(60,40,20,0.18)] overflow-hidden"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photos[1].thumbnailUrl ?? photos[1].url}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        </span>
+      ) : null}
+      <span className="absolute inset-0 rounded-[4px] sm:rounded-[5px] border border-paper bg-soft shadow-[0_2px_6px_-1px_rgba(60,40,20,0.22)] overflow-hidden transition-transform hover:scale-105">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={first.thumbnailUrl ?? first.url}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      </span>
+    </button>
+  );
+}
+
 function ChoiceBar({
   booking,
   person,
-  photoCount,
   onCancel,
   onEdit,
   onDelete,
-  onPhotos,
 }: {
   booking: Booking | null;
   person: Person;
-  photoCount: number;
   onCancel: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onPhotos: () => void;
 }) {
   if (!booking) return null;
   const sameDay = booking.start === booking.end;
@@ -1215,7 +1395,7 @@ function ChoiceBar({
               your stay · {person.first}
             </span>
           </div>
-          <div className="ml-auto flex flex-wrap items-center justify-end gap-1">
+          <div className="ml-auto flex items-center gap-1">
             <button
               type="button"
               onClick={onCancel}
@@ -1229,16 +1409,6 @@ function ChoiceBar({
               className="rounded-full border border-rule px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium text-ink transition-colors hover:border-ink"
             >
               Delete
-            </button>
-            <button
-              type="button"
-              onClick={onPhotos}
-              className="rounded-full border border-rule px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium text-ink transition-colors hover:border-ink"
-            >
-              Photos
-              {photoCount > 0 ? (
-                <span className="ml-1.5 text-muted">{photoCount}</span>
-              ) : null}
             </button>
             <button
               type="button"

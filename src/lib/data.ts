@@ -17,7 +17,9 @@ export type Photo = {
   id: string;
   bookingId: string;
   uploaderId: string;
+  date: string;
   url: string;
+  thumbnailUrl: string | null;
   caption: string | null;
   createdAt: string;
 };

@@ -18,7 +18,24 @@ export function IdentityPicker({
   currentId: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [renderMenu, setRenderMenu] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [view, setView] = useState<"profile" | "switch">("profile");
+
+  useEffect(() => {
+    if (open) {
+      setRenderMenu(true);
+      // Wait for the closed-state paint before flipping to visible so
+      // the transition has something to interpolate from.
+      const t = window.setTimeout(() => setMenuVisible(true), 0);
+      return () => window.clearTimeout(t);
+    }
+    if (!renderMenu) return;
+    setMenuVisible(false);
+    const t = window.setTimeout(() => setRenderMenu(false), 220);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   const [optimisticId, setOptimisticId] = useState(currentId);
   const [optimisticName, setOptimisticName] = useState<string | null>(null);
   const [optimisticColor, setOptimisticColor] = useState<string | null>(null);
@@ -192,11 +209,19 @@ export function IdentityPicker({
         </span>
       </button>
 
-      {open ? (
+      {renderMenu ? (
         <div
           role="dialog"
           aria-label="Your profile"
-          className="absolute right-0 top-[calc(100%+8px)] z-20 w-[304px] overflow-hidden rounded-[12px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)]"
+          className="absolute right-0 top-[calc(100%+8px)] z-20 w-[304px] overflow-hidden rounded-[12px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)] origin-top-right"
+          style={{
+            opacity: menuVisible ? 1 : 0,
+            transform: menuVisible
+              ? "translateY(0) scale(1)"
+              : "translateY(-6px) scale(0.96)",
+            transition:
+              "opacity 220ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+          }}
         >
           {view === "profile" ? (
             <ProfileView

@@ -1,18 +1,26 @@
 import { and, gte, lte, inArray } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { db } from "./client";
 import { bookings, people, photos } from "./schema";
 import type { Person, Booking, Photo } from "@/lib/data";
 
-export async function getPeople(): Promise<Person[]> {
-  const rows = await db.select().from(people).orderBy(people.createdAt);
-  return rows.map((r) => ({
-    id: r.id,
-    first: r.firstName,
-    initial: r.firstName.charAt(0).toUpperCase(),
-    color: r.color,
-    imageUrl: r.imageUrl,
-  }));
-}
+// People list rarely changes (only when someone updates their name,
+// color, or photo). Cache across requests and invalidate via the
+// 'people' tag from the relevant server actions.
+export const getPeople = unstable_cache(
+  async (): Promise<Person[]> => {
+    const rows = await db.select().from(people).orderBy(people.createdAt);
+    return rows.map((r) => ({
+      id: r.id,
+      first: r.firstName,
+      initial: r.firstName.charAt(0).toUpperCase(),
+      color: r.color,
+      imageUrl: r.imageUrl,
+    }));
+  },
+  ["people"],
+  { tags: ["people"], revalidate: 600 },
+);
 
 export async function getBookingsForMonth(
   year: number,
@@ -61,7 +69,9 @@ export async function getPhotosForBookings(
     id: r.id,
     bookingId: r.bookingId,
     uploaderId: r.uploaderId,
+    date: r.photoDate,
     url: r.url,
+    thumbnailUrl: r.thumbnailUrl,
     caption: r.caption,
     createdAt: r.createdAt.toISOString(),
   }));

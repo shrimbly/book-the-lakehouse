@@ -1,7 +1,7 @@
 "use server";
 
 import { and, eq, ne, lte, gte } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { db } from "@/db/client";
 import { bookings, people, photos } from "@/db/schema";
@@ -204,6 +204,7 @@ export async function updateMyProfile(input: {
   if (Object.keys(updates).length === 0) return { ok: true };
 
   await db.update(people).set(updates).where(eq(people.id, id));
+  updateTag("people");
   revalidatePath("/");
   return { ok: true };
 }
@@ -263,59 +264,83 @@ export async function uploadProfileImage(
     }
   }
 
+  updateTag("people");
   revalidatePath("/");
   return { url: blob.url };
 }
 
 export async function uploadStayPhoto(
   bookingId: string,
+  date: string,
   formData: FormData,
-): Promise<{ id: string; url: string } | { error: string }> {
+): Promise<{ id: string; url: string; thumbnailUrl: string } | { error: string }> {
   const me = await getCurrentIdentityId();
   if (!me) return { error: "Not signed in" };
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return { error: "Photo upload isn't configured" };
   }
+  if (!ISO_DATE.test(date)) {
+    return { error: "Invalid date" };
+  }
 
   const ownerRows = await db
-    .select({ personId: bookings.personId })
+    .select({
+      personId: bookings.personId,
+      startDate: bookings.startDate,
+      endDate: bookings.endDate,
+    })
     .from(bookings)
     .where(eq(bookings.id, bookingId))
     .limit(1);
   if (ownerRows.length === 0) return { error: "Booking not found" };
   if (ownerRows[0].personId !== me) return { error: "Not your booking" };
+  if (date < ownerRows[0].startDate || date > ownerRows[0].endDate) {
+    return { error: "Date is outside this stay" };
+  }
 
   const file = formData.get("file");
+  const thumb = formData.get("thumbnail");
   if (!(file instanceof File)) return { error: "No file received" };
+  if (!(thumb instanceof File)) return { error: "No thumbnail received" };
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     return { error: "Image must be jpeg, png, webp, or gif" };
+  }
+  if (!ALLOWED_IMAGE_TYPES.has(thumb.type)) {
+    return { error: "Thumbnail must be jpeg, png, webp, or gif" };
   }
   if (file.size > MAX_IMAGE_BYTES) {
     return { error: "Image must be under 5 MB" };
   }
+  if (thumb.size > MAX_IMAGE_BYTES) {
+    return { error: "Thumbnail too large" };
+  }
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const safeExt = /^[a-z0-9]{1,8}$/.test(ext) ? ext : "jpg";
-  const blob = await put(
-    `stays/${bookingId}/${Date.now()}.${safeExt}`,
-    file,
-    {
+  const stamp = Date.now();
+  const [blob, thumbBlob] = await Promise.all([
+    put(`stays/${bookingId}/${date}/${stamp}.jpg`, file, {
       access: "public",
       addRandomSuffix: true,
       contentType: file.type,
-    },
-  );
+    }),
+    put(`stays/${bookingId}/${date}/${stamp}-thumb.jpg`, thumb, {
+      access: "public",
+      addRandomSuffix: true,
+      contentType: thumb.type,
+    }),
+  ]);
 
   const id = crypto.randomUUID();
   await db.insert(photos).values({
     id,
     bookingId,
     uploaderId: me,
+    photoDate: date,
     url: blob.url,
+    thumbnailUrl: thumbBlob.url,
   });
 
   revalidatePath("/");
-  return { id, url: blob.url };
+  return { id, url: blob.url, thumbnailUrl: thumbBlob.url };
 }
 
 export async function deleteStayPhoto(
@@ -325,7 +350,11 @@ export async function deleteStayPhoto(
   if (!me) return { error: "Not signed in" };
 
   const rows = await db
-    .select({ uploaderId: photos.uploaderId, url: photos.url })
+    .select({
+      uploaderId: photos.uploaderId,
+      url: photos.url,
+      thumbnailUrl: photos.thumbnailUrl,
+    })
     .from(photos)
     .where(eq(photos.id, photoId))
     .limit(1);
@@ -335,8 +364,11 @@ export async function deleteStayPhoto(
   await db.delete(photos).where(eq(photos.id, photoId));
 
   if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const urls = [rows[0].url, rows[0].thumbnailUrl].filter(
+      (u): u is string => !!u,
+    );
     try {
-      await del(rows[0].url);
+      await del(urls);
     } catch {
       // ignore
     }
@@ -370,6 +402,7 @@ export async function removeProfileImage(): Promise<{ ok: true } | { error: stri
     }
   }
 
+  updateTag("people");
   revalidatePath("/");
   return { ok: true };
 }

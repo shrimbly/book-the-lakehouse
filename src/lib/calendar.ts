@@ -5,7 +5,12 @@ export type Cell = {
   day: number;
   inMonth: boolean;
   isToday: boolean;
-  booking: { person: Person; isStart: boolean; isEnd: boolean } | null;
+  booking: {
+    id: string;
+    person: Person;
+    isStart: boolean;
+    isEnd: boolean;
+  } | null;
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -44,6 +49,7 @@ export function buildMonthCells(
         const person = people.find((p) => p.id === b.personId);
         if (person) {
           booking = {
+            id: b.id,
             person,
             isStart: cellIso === b.start,
             isEnd: cellIso === b.end,

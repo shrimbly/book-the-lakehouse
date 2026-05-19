@@ -35,13 +35,16 @@ export const photos = pgTable(
     uploaderId: varchar("uploader_id", { length: 64 })
       .notNull()
       .references(() => people.id, { onDelete: "cascade" }),
+    photoDate: date("photo_date").notNull(),
     url: text("url").notNull(),
+    thumbnailUrl: text("thumbnail_url"),
     caption: text("caption"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
     index("photos_booking_idx").on(t.bookingId),
     index("photos_uploader_idx").on(t.uploaderId),
+    index("photos_date_idx").on(t.photoDate),
   ],
 );
 

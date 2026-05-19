@@ -16,6 +16,9 @@
   --animate-toast-pop: toast-pop 240ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   --animate-backdrop-fade: backdrop-fade 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   --animate-blur-fade: blur-fade 720ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  --animate-blur-fade-flat: blur-fade-flat 720ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  --animate-blur-fade-out: blur-fade-out 480ms cubic-bezier(0.4, 0, 0.6, 1) both;
+  --animate-menu-pop: menu-pop 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 html, body {
@@ -27,6 +30,21 @@ html, body {
 @keyframes ribbon-grow {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
+}
+
+.preview-ribbon-fill {
+  --ribbon-edge: 4px;
+  left: calc(var(--rl) + (var(--ol) * var(--ribbon-edge)));
+  width: calc(var(--rw) - ((var(--ol) + var(--or)) * var(--ribbon-edge)));
+  transition:
+    left 220ms cubic-bezier(0.32, 0.72, 0.4, 1),
+    width 220ms cubic-bezier(0.32, 0.72, 0.4, 1);
+}
+@media (min-width: 640px) {
+  .preview-ribbon-fill { --ribbon-edge: 6px; }
+}
+@starting-style {
+  .preview-ribbon-fill { width: 0; }
 }
 
 @keyframes avatar-pop {
@@ -47,4 +65,19 @@ html, body {
 @keyframes blur-fade {
   from { opacity: 0; filter: blur(10px); transform: translateY(8px) scale(0.985); }
   to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+}
+
+@keyframes blur-fade-flat {
+  from { opacity: 0; filter: blur(10px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+@keyframes blur-fade-out {
+  from { opacity: 1; filter: blur(0); }
+  to { opacity: 0; filter: blur(10px); }
+}
+
+@keyframes menu-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
