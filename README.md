@@ -40,6 +40,7 @@ hard to double-book, and calm enough that everyone can use it.
 | Private family entry | Protect the calendar with a simple four-digit `FAMILY_PIN`. |
 | Personal booking lanes | Each booking is colored and labeled by family member. |
 | Conflict checks | Server Actions reject overlapping stays before they hit the database. |
+| Optional stay costs | Show a payment prompt with total cost and bank details before a stay is confirmed. |
 | Photo memories | Upload photos for a specific day within a stay. |
 | Portable branding | Rename the home, footer, metadata, and cookie prefix with env vars. |
 | Database optional locally | Run with seeded in-memory demo data until you connect Neon. |
@@ -89,6 +90,13 @@ FAMILY_PIN=1234
 DATABASE_URL=postgres://...
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
 
+BOOKING_COST_PER_NIGHT=40
+BOOKING_COST_CURRENCY=NZD
+PAYMENT_ACCOUNT_NAME="Lakehouse Account"
+PAYMENT_ACCOUNT_NUMBER="12-3456-7890123-00"
+PAYMENT_REFERENCE="Lakehouse stay"
+PAYMENT_NOTE="Please transfer after booking."
+
 NEXT_PUBLIC_HOME_NAME="Book the lakehouse"
 NEXT_PUBLIC_HOME_KIND=lakehouse
 NEXT_PUBLIC_BUILT_BY="Your Name"
@@ -100,6 +108,7 @@ COOKIE_PREFIX=book-the-lakehouse
 
 Only `FAMILY_PIN` is required for the PIN gate. `DATABASE_URL` enables the real
 database-backed calendar. `BLOB_READ_WRITE_TOKEN` enables photo uploads.
+`BOOKING_COST_PER_NIGHT` enables the optional payment prompt for new bookings.
 
 ## Database Setup
 

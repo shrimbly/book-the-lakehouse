@@ -10,6 +10,7 @@ import { Calendar } from "@/components/Calendar";
 import { MonthSwiper } from "@/components/MonthSwiper";
 import { MonthTitle } from "@/components/MonthTitle";
 import { siteFooterText } from "@/lib/site";
+import { getPaymentConfig } from "@/lib/payment";
 
 function parseMonthParam(value: string | string[] | undefined): [number, number] {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -39,6 +40,7 @@ export default async function Home({
   const { people, bookings, photos, today } = await fetchCalendarData(year, month);
   const identityId = await getCurrentIdentityId();
   const me = identityId ? people.find((p) => p.id === identityId) : undefined;
+  const paymentConfig = getPaymentConfig();
 
   if (!me) {
     return <IdentityOnboarding people={people} />;
@@ -105,6 +107,7 @@ export default async function Home({
             people={people}
             meId={me.id}
             today={today}
+            paymentConfig={paymentConfig}
           />
         </div>
 

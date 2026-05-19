@@ -13,6 +13,7 @@ import {
 } from "@/app/actions";
 import { PhotoSheet } from "./PhotoSheet";
 import { processImage } from "@/lib/image";
+import type { PaymentConfig } from "@/lib/payment";
 
 type OptimisticAction =
   | { type: "add"; booking: Booking }
@@ -68,6 +69,7 @@ export function Calendar({
   people,
   meId,
   today,
+  paymentConfig,
 }: {
   year: number;
   month: number;
@@ -76,6 +78,7 @@ export function Calendar({
   people: Person[];
   meId: string;
   today: string;
+  paymentConfig: PaymentConfig | null;
 }) {
   const [pickStart, setPickStart] = useState<string | null>(null);
   const [pickEnd, setPickEnd] = useState<string | null>(null);
@@ -90,6 +93,10 @@ export function Calendar({
     bookingId: string;
     date: string;
     mode: "view" | "upload";
+  } | null>(null);
+  const [paymentReview, setPaymentReview] = useState<{
+    start: string;
+    end: string;
   } | null>(null);
   const [photoPending, setPhotoPending] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -326,6 +333,7 @@ export function Calendar({
     setHovered(null);
     setIsDragging(false);
     setEditingId(null);
+    setPaymentReview(null);
   }
 
   function cellMouseDown(iso: string, inMonth: boolean, hasBooking: boolean) {
@@ -378,6 +386,14 @@ export function Calendar({
     const start = pickStart;
     const end = pickEnd;
     const id = editingId;
+    if (!id && paymentConfig) {
+      setPaymentReview({ start, end });
+      return;
+    }
+    saveBooking(start, end, id);
+  }
+
+  function saveBooking(start: string, end: string, id: string | null) {
     setServerError(null);
     cancel();
     startTransition(async () => {
@@ -982,6 +998,19 @@ export function Calendar({
                   })()
                 : null}
 
+              {paymentReview && paymentConfig ? (
+                <PaymentDialog
+                  start={paymentReview.start}
+                  end={paymentReview.end}
+                  pending={isPending}
+                  payment={paymentConfig}
+                  onCancel={() => setPaymentReview(null)}
+                  onConfirm={() =>
+                    saveBooking(paymentReview.start, paymentReview.end, null)
+                  }
+                />
+              ) : null}
+
               {serverError ? (
                 <div className="fixed top-4 right-4 z-[70] flex items-center gap-3 rounded-[10px] border border-rule bg-paper px-4 py-2.5 text-[12px] text-ink shadow-[0_8px_24px_-8px_rgba(60,40,20,0.18)]">
                   <span>{serverError}</span>
@@ -999,6 +1028,148 @@ export function Calendar({
             document.body,
           )
         : null}
+    </>
+  );
+}
+
+function formatMoney(value: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toFixed(Number.isInteger(value) ? 0 : 2)}`;
+  }
+}
+
+function PaymentDialog({
+  start,
+  end,
+  payment,
+  pending,
+  onCancel,
+  onConfirm,
+}: {
+  start: string;
+  end: string;
+  payment: PaymentConfig;
+  pending?: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const nights = nightsBetween(start, end);
+  const total = nights * payment.costPerNight;
+  const lines = [
+    payment.accountName ? `Name: ${payment.accountName}` : "",
+    payment.accountNumber ? `Account: ${payment.accountNumber}` : "",
+    payment.reference ? `Reference: ${payment.reference}` : "",
+    `Amount: ${formatMoney(total, payment.currency)}`,
+  ].filter(Boolean);
+
+  async function copyDetails() {
+    if (!navigator.clipboard) return;
+    await navigator.clipboard.writeText(lines.join("\n"));
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1400);
+  }
+
+  return (
+    <>
+      <div
+        aria-hidden
+        onPointerDown={onCancel}
+        className="fixed inset-0 z-40 bg-ink/35 animate-backdrop-fade"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-title"
+        className="fixed inset-x-0 bottom-10 sm:bottom-14 z-50 flex justify-center px-3 sm:px-4 animate-toast-pop"
+      >
+        <div className="w-full max-w-[calc(100vw-1.5rem)] rounded-[12px] sm:w-[460px] sm:rounded-[14px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)]">
+          <div className="px-4 py-4 sm:px-5 sm:py-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  id="payment-title"
+                  className="m-0 text-[15px] font-semibold tracking-[-0.01em] text-ink"
+                >
+                  Stay cost
+                </h2>
+                <p className="mt-1 text-[12px] leading-snug text-muted">
+                  {fmtDay(start)}
+                  {start === end ? "" : ` to ${fmtDay(end)}`}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-[18px] font-semibold tracking-[-0.02em] text-ink">
+                  {formatMoney(total, payment.currency)}
+                </div>
+                <div className="text-[11px] text-muted">
+                  {nights} night{nights === 1 ? "" : "s"} at{" "}
+                  {formatMoney(payment.costPerNight, payment.currency)}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-[10px] border border-soft bg-soft/40 px-3 py-3 text-[12px] leading-relaxed text-ink">
+              {payment.accountName ? (
+                <div>
+                  <span className="text-muted">Name</span>{" "}
+                  <span className="font-medium">{payment.accountName}</span>
+                </div>
+              ) : null}
+              {payment.accountNumber ? (
+                <div>
+                  <span className="text-muted">Account</span>{" "}
+                  <span className="font-medium tabular-nums">
+                    {payment.accountNumber}
+                  </span>
+                </div>
+              ) : null}
+              {payment.reference ? (
+                <div>
+                  <span className="text-muted">Reference</span>{" "}
+                  <span className="font-medium">{payment.reference}</span>
+                </div>
+              ) : null}
+              {payment.note ? (
+                <p className="m-0 mt-2 text-muted">{payment.note}</p>
+              ) : null}
+            </div>
+
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              {lines.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={copyDetails}
+                  className="rounded-full border border-rule px-3 py-1.5 text-[12px] font-medium text-ink transition-colors hover:border-ink"
+                >
+                  {copied ? "Copied" : "Copy details"}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded-full px-3 py-1.5 text-[12px] text-muted transition-colors hover:text-ink"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={pending}
+                className="rounded-full bg-ink px-4 py-1.5 text-[12px] font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25"
+              >
+                {pending ? "Saving..." : "Confirm stay"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
