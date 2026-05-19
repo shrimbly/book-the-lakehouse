@@ -4,16 +4,19 @@ import { useState, useTransition } from "react";
 import { setBookingPaymentSettled } from "@/app/actions";
 import type { MaryStay } from "@/db/queries";
 
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 function fmtDay(iso: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-  }).format(new Date(`${iso}T00:00:00`));
+  const [, month, day] = iso.split("-").map(Number);
+  return `${day} ${MONTH_SHORT[month - 1]}`;
 }
 
 function formatMoney(value: number, currency: string): string {
   try {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat("en-NZ", {
       style: "currency",
       currency,
       maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
@@ -30,10 +33,12 @@ export function MaryChecklist({
 }) {
   const [optimistic, setOptimistic] = useState(stays);
   const [error, setError] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function toggle(id: string, settled: boolean) {
     setError(null);
+    setSavingId(id);
     setOptimistic((rows) =>
       rows.map((stay) =>
         stay.id === id ? { ...stay, paymentSettled: settled } : stay,
@@ -45,6 +50,7 @@ export function MaryChecklist({
         setError(result.error);
         setOptimistic(stays);
       }
+      setSavingId(null);
     });
   }
 
@@ -72,7 +78,7 @@ export function MaryChecklist({
             <input
               type="checkbox"
               checked={stay.paymentSettled}
-              disabled={isPending}
+              disabled={isPending && savingId === stay.id}
               onChange={(event) => toggle(stay.id, event.currentTarget.checked)}
               className="h-4 w-4 accent-ink"
             />
