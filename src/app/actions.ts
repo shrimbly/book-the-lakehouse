@@ -7,6 +7,7 @@ import { db } from "@/db/client";
 import { bookings, people, photos } from "@/db/schema";
 import { IDENTITY_COOKIE, getCurrentIdentityId } from "@/lib/identity";
 import { GATE_COOKIE } from "@/lib/gate";
+import { isMaryId } from "@/lib/mary";
 import { isPaletteColor } from "@/lib/palette";
 import { put, del } from "@vercel/blob";
 
@@ -112,6 +113,22 @@ export async function updateBooking(input: {
     .where(eq(bookings.id, input.id));
 
   revalidatePath("/");
+  return { ok: true };
+}
+
+export async function setBookingPaymentSettled(input: {
+  id: string;
+  settled: boolean;
+}): Promise<{ ok: true } | { error: string }> {
+  const me = await getCurrentIdentityId();
+  if (!isMaryId(me)) return { error: "Mary mode only" };
+
+  await db
+    .update(bookings)
+    .set({ paymentSettled: input.settled })
+    .where(eq(bookings.id, input.id));
+
+  revalidatePath("/mary");
   return { ok: true };
 }
 

@@ -11,6 +11,7 @@ import { MonthSwiper } from "@/components/MonthSwiper";
 import { MonthTitle } from "@/components/MonthTitle";
 import { siteFooterText } from "@/lib/site";
 import { getPaymentConfig } from "@/lib/payment";
+import { isMaryId } from "@/lib/mary";
 
 function parseMonthParam(value: string | string[] | undefined): [number, number] {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -117,6 +118,14 @@ export default async function Home({
             aria-hidden
           />
           {siteFooterText}
+          {isMaryId(me.id) ? (
+            <>
+              <span className="mx-2 text-faint">·</span>
+              <Link href="/mary" className="transition-colors hover:text-ink">
+                Mary mode
+              </Link>
+            </>
+          ) : null}
         </footer>
       </div>
     </main>

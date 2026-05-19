@@ -32,7 +32,7 @@ const MONTH_SHORT = [
 const DOW_SUN_FIRST = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function fmtDay(iso: string): string {
-  const d = new Date(iso);
+  const d = new Date(`${iso}T00:00:00`);
   return `${DOW_SUN_FIRST[d.getDay()]} ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
 }
 

@@ -33,6 +33,7 @@ Run `npm run lint` and `npm run build` before handing off code changes when prac
 ## Code Map
 
 - `src/app/page.tsx` is the main calendar page.
+- `src/app/mary/page.tsx` is Mary mode, the admin checklist for trusted Marys.
 - `src/app/actions.ts` contains Server Actions for bookings, identity, PIN unlock, and uploads.
 - `src/components/Calendar.tsx` owns the interactive calendar UI.
 - `src/components/IdentityPicker.tsx`, `IdentityOnboarding.tsx`, and `PinGate.tsx` handle lightweight family identity and access.
@@ -46,6 +47,7 @@ Run `npm run lint` and `npm run build` before handing off code changes when prac
 
 - This is not a public booking marketplace. It is a lightweight private calendar for trusted family members.
 - Keep auth intentionally simple: shared `FAMILY_PIN` plus selected identity cookie.
+- Mary mode users are called Marys and are configured with `MARY_IDS`.
 - Server Actions are directly reachable. Validate identity, ownership, date ranges, and conflicts in every mutation.
 - Booking dates use ISO `YYYY-MM-DD` strings. Preserve that shape unless doing a deliberate data-model migration.
 - The app should run in demo mode without `DATABASE_URL`; avoid breaking the no-database local path.

@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, date, timestamp, index } from "drizzle-orm/pg-core";
+import { boolean, pgTable, varchar, text, date, timestamp, index } from "drizzle-orm/pg-core";
 
 export const people = pgTable("people", {
   id: varchar("id", { length: 64 }).primaryKey(),
@@ -17,6 +17,7 @@ export const bookings = pgTable(
       .references(() => people.id, { onDelete: "cascade" }),
     startDate: date("start_date").notNull(),
     endDate: date("end_date").notNull(),
+    paymentSettled: boolean("payment_settled").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [

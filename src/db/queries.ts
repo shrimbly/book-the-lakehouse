@@ -1,8 +1,9 @@
-import { and, gte, lte, inArray } from "drizzle-orm";
+import { and, asc, eq, gte, lte, inArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "./client";
 import { bookings, people, photos } from "./schema";
 import type { Person, Booking, Photo } from "@/lib/data";
+import type { PaymentConfig } from "@/lib/payment";
 
 // People list rarely changes (only when someone updates their name,
 // color, or photo). Cache across requests and invalidate via the
@@ -53,7 +54,55 @@ export async function getBookingsForMonth(
     personId: r.personId,
     start: r.startDate,
     end: r.endDate,
+    paymentSettled: r.paymentSettled,
   }));
+}
+
+function nightsBetween(start: string, end: string): number {
+  const s = new Date(`${start}T00:00:00Z`).getTime();
+  const e = new Date(`${end}T00:00:00Z`).getTime();
+  return Math.max(1, Math.round((e - s) / 86400000));
+}
+
+export type MaryStay = {
+  id: string;
+  personName: string;
+  start: string;
+  end: string;
+  nights: number;
+  cost: number | null;
+  currency: string;
+  paymentSettled: boolean;
+};
+
+export async function getAllStaysForMary(
+  payment: PaymentConfig | null,
+): Promise<MaryStay[]> {
+  const rows = await db
+    .select({
+      id: bookings.id,
+      startDate: bookings.startDate,
+      endDate: bookings.endDate,
+      paymentSettled: bookings.paymentSettled,
+      personName: people.firstName,
+    })
+    .from(bookings)
+    .innerJoin(people, eq(bookings.personId, people.id))
+    .orderBy(asc(bookings.startDate));
+
+  return rows.map((row) => {
+    const nights = nightsBetween(row.startDate, row.endDate);
+    return {
+      id: row.id,
+      personName: row.personName,
+      start: row.startDate,
+      end: row.endDate,
+      nights,
+      cost: payment ? nights * payment.costPerNight : null,
+      currency: payment?.currency ?? "NZD",
+      paymentSettled: row.paymentSettled,
+    };
+  });
 }
 
 export async function getPhotosForBookings(

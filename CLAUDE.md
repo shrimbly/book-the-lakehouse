@@ -5,6 +5,7 @@ Read `AGENTS.md` first. It is the source of truth for repo conventions, command 
 ## Quick Orientation
 
 - Main app route: `src/app/page.tsx`
+- Mary mode route: `src/app/mary/page.tsx`
 - Server Actions: `src/app/actions.ts`
 - Calendar UI: `src/components/Calendar.tsx`
 - Database schema/queries: `src/db/schema.ts`, `src/db/queries.ts`
@@ -26,6 +27,7 @@ Use `rg` for search. Before editing Next.js App Router, Server Actions, metadata
 
 - Keep the app easy to fork for another family lakehouse or holiday home.
 - Preserve demo mode when `DATABASE_URL` is missing.
+- Admin-style users are called Marys; use `MARY_IDS` and Mary mode language.
 - Keep mutations authorized in `src/app/actions.ts`; validate identity, ownership, date formats, and booking conflicts server-side.
 - Do not commit `.env.local` or real credentials.
 - Prefer small, focused changes over broad refactors.
