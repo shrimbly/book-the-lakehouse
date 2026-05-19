@@ -6,7 +6,7 @@
 
 # Book the lakehouse
 
-### A tiny, beautiful booking calendar for a family bach, cabin, cottage, lakehouse, or holiday home.
+### A tiny, beautiful, and low-cost booking calendar for the family lakehouse or holiday home.
 
 Simple shared availability for the places families pass between each other.  
 No marketplace, no payments, no accounts to administer. Just a private calendar,
@@ -56,8 +56,8 @@ hard to double-book, and calm enough that everyone can use it.
 ### Quick Start
 
 ```bash
-git clone https://github.com/shrimbly/booking-calendar.git
-cd booking-calendar
+git clone https://github.com/shrimbly/book-the-lakehouse.git
+cd book-the-lakehouse
 npm install
 cp .env.example .env.local
 npm run dev
