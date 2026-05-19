@@ -31,6 +31,7 @@ hard to double-book, and calm enough that everyone can use it.
 - Optional stay photos, thumbnails, and profile images via Vercel Blob
 - Demo data fallback when no database is configured
 - Import helpers for older spreadsheet-based calendars
+- Coding-agent friendly docs in `AGENTS.md` and `CLAUDE.md`
 
 ## Features
 
@@ -67,6 +68,17 @@ Open [http://localhost:3000](http://localhost:3000).
 
 With only `.env.example` copied, the app can render with demo data. Add
 `DATABASE_URL` when you are ready to persist people, bookings, and photos.
+
+## Simple Setup
+
+The intended production setup is Vercel + Neon:
+
+1. Fork or clone this repo.
+2. Create a [Neon](https://neon.com/pricing) Postgres project. The Free plan is enough to get started for a family calendar.
+3. Create a [Vercel](https://vercel.com/pricing) project from the repo. The Hobby plan is a good starting point for personal use.
+4. Add `DATABASE_URL`, `FAMILY_PIN`, and the `NEXT_PUBLIC_*` settings from `.env.example` in Vercel.
+5. Optional: add `BLOB_READ_WRITE_TOKEN` if you want profile photos and stay photos.
+6. Run `npm run db:push` once, then `npm run db:seed` to add starter people and sample bookings.
 
 ## Environment Variables
 
