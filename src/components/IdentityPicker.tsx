@@ -10,6 +10,9 @@ import {
   removeProfileImage,
 } from "@/app/actions";
 import { PALETTE } from "@/lib/palette";
+import { Pencil } from "lucide-react";
+import { AddPersonForm } from "./AddPersonForm";
+import { AvatarPhotoEditor } from "./AvatarPhotoEditor";
 
 export function IdentityPicker({
   people,
@@ -23,7 +26,9 @@ export function IdentityPicker({
   const [open, setOpen] = useState(false);
   const [renderMenu, setRenderMenu] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [view, setView] = useState<"profile" | "switch">("profile");
+  const [view, setView] = useState<"profile" | "switch" | "add">("profile");
+  const [viewVisible, setViewVisible] = useState(true);
+  const viewTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -57,7 +62,6 @@ export function IdentityPicker({
   const [isPending, startTransition] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const baseCurrent =
     people.find((p) => p.id === optimisticId) ??
@@ -82,11 +86,22 @@ export function IdentityPicker({
       setOptimisticImageUrl(undefined);
     }, 0);
     return () => window.clearTimeout(t);
-  }, [baseCurrent.id, baseCurrent.first, baseCurrent.color, baseCurrent.imageUrl]);
+  }, [
+    baseCurrent.id,
+    baseCurrent.first,
+    baseCurrent.color,
+    baseCurrent.imageUrl,
+  ]);
 
   useEffect(() => {
     if (!open) return;
     const onPointer = (e: MouseEvent) => {
+      if (
+        e.target instanceof Element &&
+        e.target.closest("[data-profile-photo-dialog]")
+      ) {
+        return;
+      }
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
@@ -104,9 +119,18 @@ export function IdentityPicker({
 
   useEffect(() => {
     if (open) return;
-    const t = window.setTimeout(() => setView("profile"), 0);
+    const t = window.setTimeout(() => {
+      setView("profile");
+      setViewVisible(true);
+    }, 220);
     return () => window.clearTimeout(t);
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (viewTimerRef.current) window.clearTimeout(viewTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!savedFlash) return;
@@ -145,17 +169,17 @@ export function IdentityPicker({
     });
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.currentTarget.files?.[0];
-    e.currentTarget.value = "";
-    if (!file) return;
+  async function handlePhotoSave(processed: Blob) {
     setError(null);
-    // Local preview while the upload runs
-    const localUrl = URL.createObjectURL(file);
+
+    const localUrl = URL.createObjectURL(processed);
     setOptimisticImageUrl(localUrl);
     setIsUploadingImage(true);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append(
+      "file",
+      new File([processed], "profile.jpg", { type: "image/jpeg" }),
+    );
     try {
       const result = await uploadProfileImage(formData);
       if ("error" in result) {
@@ -200,6 +224,16 @@ export function IdentityPicker({
     });
   }
 
+  function showView(nextView: "profile" | "switch" | "add") {
+    if (nextView === view) return;
+    if (viewTimerRef.current) window.clearTimeout(viewTimerRef.current);
+    setViewVisible(false);
+    viewTimerRef.current = window.setTimeout(() => {
+      setView(nextView);
+      window.requestAnimationFrame(() => setViewVisible(true));
+    }, 140);
+  }
+
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -207,20 +241,12 @@ export function IdentityPicker({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="inline-flex items-center gap-2.5 rounded-full border border-rule py-1 pl-1.5 pr-3.5 text-[12px] transition-colors hover:border-ink data-[open=true]:border-ink"
+        aria-label={`Edit profile for ${current.first}`}
+        className="inline-flex h-[34px] items-center gap-2 rounded-full border border-rule py-1 pl-1 pr-3 text-[12px] leading-none transition-colors hover:border-ink data-[open=true]:border-ink"
         data-open={open}
       >
         <AvatarCircle person={current} size={26} fontSize={12} />
         <span>{current.first}</span>
-        <span
-          className={
-            open
-              ? "rotate-180 text-[10px] text-faint transition-transform"
-              : "text-[10px] text-faint transition-transform"
-          }
-        >
-          ▾
-        </span>
       </button>
 
       {renderMenu ? (
@@ -237,32 +263,51 @@ export function IdentityPicker({
               "opacity 220ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1)",
           }}
         >
-          {view === "profile" ? (
-            <ProfileView
-              current={current}
-              error={error}
-              savedFlash={savedFlash}
-              isPending={isPending}
-              isUploadingImage={isUploadingImage}
-              nameInputRef={nameInputRef}
-              fileInputRef={fileInputRef}
-              onCommitName={commitName}
-              onPickColor={pickColor}
-              onFileChange={handleFileChange}
-              onRemoveImage={handleRemoveImage}
-              onOpenSwitch={() => setView("switch")}
-              showMaryMode={showMaryMode}
-              onClose={() => setOpen(false)}
-            />
-          ) : (
-            <SwitchView
-              people={people}
-              currentId={current.id}
-              isPending={isPending}
-              onPick={switchTo}
-              onBack={() => setView("profile")}
-            />
-          )}
+          <div
+            style={{
+              opacity: viewVisible ? 1 : 0,
+              transform: viewVisible ? "translateX(0)" : "translateX(-8px)",
+              transition:
+                "opacity 140ms cubic-bezier(0.4, 0, 0.6, 1), transform 140ms cubic-bezier(0.4, 0, 0.6, 1)",
+            }}
+          >
+            {view === "profile" ? (
+              <ProfileView
+                current={current}
+                error={error}
+                savedFlash={savedFlash}
+                isPending={isPending}
+                isUploadingImage={isUploadingImage}
+                nameInputRef={nameInputRef}
+                onCommitName={commitName}
+                onPickColor={pickColor}
+                onPhotoSave={handlePhotoSave}
+                onRemoveImage={handleRemoveImage}
+                onOpenSwitch={() => showView("switch")}
+                showMaryMode={showMaryMode}
+                onClose={() => setOpen(false)}
+              />
+            ) : (
+              view === "switch" ? (
+                <SwitchView
+                  people={people}
+                  currentId={current.id}
+                  isPending={isPending}
+                  onPick={switchTo}
+                  onAdd={() => showView("add")}
+                  onBack={() => showView("profile")}
+                />
+              ) : (
+                <AddView
+                  onBack={() => showView("switch")}
+                  onCreated={(id) => {
+                    setOptimisticId(id);
+                    setOpen(false);
+                  }}
+                />
+              )
+            )}
+          </div>
         </div>
       ) : null}
     </div>
@@ -276,10 +321,9 @@ function ProfileView({
   isPending,
   isUploadingImage,
   nameInputRef,
-  fileInputRef,
   onCommitName,
   onPickColor,
-  onFileChange,
+  onPhotoSave,
   onRemoveImage,
   onOpenSwitch,
   showMaryMode,
@@ -291,50 +335,96 @@ function ProfileView({
   isPending: boolean;
   isUploadingImage: boolean;
   nameInputRef: React.RefObject<HTMLInputElement | null>;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
   onCommitName: (name: string) => void;
   onPickColor: (color: string) => void;
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onPhotoSave: (blob: Blob) => Promise<void>;
   onRemoveImage: () => void;
   onOpenSwitch: () => void;
   showMaryMode: boolean;
   onClose: () => void;
 }) {
+  const [isEditingName, setIsEditingName] = useState(false);
+
+  useEffect(() => {
+    if (!isEditingName) return;
+    const id = window.requestAnimationFrame(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [isEditingName, nameInputRef]);
+
   return (
     <div className="p-5">
       <div className="mb-5 flex items-center gap-3.5">
-        <AvatarCircle person={current} size={52} fontSize={20} />
+        <AvatarPhotoEditor
+          initial={current.initial}
+          color={current.color}
+          imageUrl={current.imageUrl}
+          disabled={isPending}
+          isSaving={isUploadingImage}
+          onSave={onPhotoSave}
+          onRemove={onRemoveImage}
+        />
         <div className="min-w-0">
           <div className="text-[10px] uppercase tracking-[0.16em] text-faint">
             You
           </div>
-          <div className="truncate text-[15px] font-medium">{current.first}</div>
+          <button
+            type="button"
+            onClick={() => setIsEditingName((value) => !value)}
+            className="group mt-0.5 inline-flex max-w-full items-center gap-1.5 text-left text-[15px] font-medium tracking-[-0.005em] underline decoration-transparent decoration-[1px] underline-offset-[3px] transition-colors hover:decoration-ink focus:outline-none focus-visible:decoration-ink"
+          >
+            <span className="truncate">{current.first}</span>
+            <Pencil
+              size={13}
+              strokeWidth={1.8}
+              className="shrink-0 text-ink opacity-0 [filter:blur(10px)] transition-[opacity,filter,transform] duration-[260ms] ease-[cubic-bezier(0.16,0.84,0.44,1)] group-hover:translate-x-0.5 group-hover:opacity-100 group-hover:[filter:blur(0)] group-focus-visible:translate-x-0.5 group-focus-visible:opacity-100 group-focus-visible:[filter:blur(0)]"
+              aria-hidden
+            />
+          </button>
         </div>
       </div>
 
-      <Section label="Your name">
-        <input
-          ref={nameInputRef}
-          type="text"
-          key={current.first}
-          defaultValue={current.first}
-          onBlur={(e) => onCommitName(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              e.currentTarget.blur();
-            } else if (e.key === "Escape") {
-              e.currentTarget.value = current.first;
-              e.currentTarget.blur();
-            }
-          }}
-          maxLength={64}
-          className="w-full rounded-[8px] border border-rule bg-paper px-3 py-2 text-[13px] font-medium tracking-[-0.005em] transition-colors focus:border-ink focus:outline-none"
-        />
-      </Section>
+      <div
+        className="grid transition-[grid-template-rows,opacity,filter,margin] duration-[260ms] ease-[cubic-bezier(0.16,0.84,0.44,1)]"
+        style={{
+          gridTemplateRows: isEditingName ? "1fr" : "0fr",
+          opacity: isEditingName ? 1 : 0,
+          filter: isEditingName ? "blur(0)" : "blur(8px)",
+          marginBottom: isEditingName ? 16 : 0,
+        }}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <Section label="Your name">
+            <input
+              ref={nameInputRef}
+              type="text"
+              key={current.first}
+              defaultValue={current.first}
+              onBlur={(e) => {
+                onCommitName(e.currentTarget.value);
+                setIsEditingName(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                } else if (e.key === "Escape") {
+                  e.currentTarget.value = current.first;
+                  setIsEditingName(false);
+                  e.currentTarget.blur();
+                }
+              }}
+              maxLength={64}
+              className="w-full rounded-[8px] border border-rule bg-paper px-3 py-2 text-[13px] font-medium tracking-[-0.005em] transition-colors focus:border-ink focus:outline-none"
+            />
+          </Section>
+        </div>
+      </div>
 
       <Section label="Colour">
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid w-full grid-cols-6 justify-items-center gap-x-2 gap-y-1">
           {PALETTE.map((c) => {
             const isSelected = c === current.color;
             return (
@@ -361,57 +451,6 @@ function ProfileView({
         </div>
       </Section>
 
-      <Section label="Profile photo">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          className="hidden"
-          onChange={onFileChange}
-        />
-        {current.imageUrl ? (
-          <div className="flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={current.imageUrl}
-              alt=""
-              className="h-[44px] w-[44px] shrink-0 rounded-full object-cover"
-            />
-            <button
-              type="button"
-              disabled={isUploadingImage}
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1 rounded-[8px] border border-rule px-3 py-1.5 text-[12px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isUploadingImage ? "Uploading…" : "Replace"}
-            </button>
-            <button
-              type="button"
-              disabled={isUploadingImage || isPending}
-              onClick={onRemoveImage}
-              className="rounded-[8px] px-2 py-1.5 text-[12px] text-muted transition-colors hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Remove image"
-            >
-              Remove
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            disabled={isUploadingImage}
-            onClick={() => fileInputRef.current?.click()}
-            className="flex w-full items-center gap-3 rounded-[8px] border border-dashed border-rule px-3 py-2.5 text-left text-[12px] text-muted transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="grid h-[24px] w-[24px] place-items-center rounded-full border border-dashed border-rule text-[14px] leading-none text-faint">
-              +
-            </span>
-            <span className="flex-1">
-              {isUploadingImage ? "Uploading…" : "Add a photo"}
-            </span>
-          </button>
-        )}
-      </Section>
-
       <div className="-mt-1 mb-2 flex h-[16px] items-center text-[11px]">
         {error ? (
           <span className="italic text-faint">{error}</span>
@@ -423,26 +462,27 @@ function ProfileView({
       </div>
 
       <div className="-mx-2 border-t border-soft pt-2">
+        <div className="px-2 pb-1 text-[10px] uppercase tracking-[0.14em] text-faint">
+          Other
+        </div>
+        <button
+          type="button"
+          onClick={onOpenSwitch}
+          className="mb-1 flex w-full items-center justify-between rounded-[8px] px-2 py-2 text-left text-[12px] text-muted transition-colors hover:bg-soft hover:text-ink"
+        >
+          <span>Switch person</span>
+          <span className="text-[14px] leading-none text-faint">›</span>
+        </button>
         {showMaryMode ? (
           <Link
             href="/mary"
             onClick={onClose}
-            className="mb-1 flex w-full items-center justify-between rounded-[8px] px-2 py-2 text-left text-[12px] text-muted transition-colors hover:bg-soft hover:text-ink"
+            className="flex w-full items-center justify-between rounded-[8px] px-2 py-2 text-left text-[12px] text-muted transition-colors hover:bg-soft hover:text-ink"
           >
             <span>Mary mode</span>
             <span className="text-[14px] leading-none text-faint">›</span>
           </Link>
         ) : null}
-        <button
-          type="button"
-          onClick={onOpenSwitch}
-          className="flex w-full items-center justify-between rounded-[8px] px-2 py-2 text-left text-[12px] text-muted transition-colors hover:bg-soft hover:text-ink"
-        >
-          <span>
-            Not {current.first}? <span className="text-faint">Switch person</span>
-          </span>
-          <span className="text-[14px] leading-none text-faint">›</span>
-        </button>
       </div>
     </div>
   );
@@ -453,12 +493,14 @@ function SwitchView({
   currentId,
   isPending,
   onPick,
+  onAdd,
   onBack,
 }: {
   people: Person[];
   currentId: string;
   isPending: boolean;
   onPick: (id: string) => void;
+  onAdd: () => void;
   onBack: () => void;
 }) {
   return (
@@ -499,6 +541,46 @@ function SwitchView({
           );
         })}
       </div>
+      <div className="mx-2 my-1 h-px bg-soft" />
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={onAdd}
+        className="flex w-full items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-left text-[12px] text-muted transition-colors hover:bg-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full border border-dashed border-rule text-[14px] text-faint">
+          +
+        </span>
+        <span className="flex-1 font-medium">Add someone</span>
+      </button>
+    </div>
+  );
+}
+
+function AddView({
+  onBack,
+  onCreated,
+}: {
+  onBack: () => void;
+  onCreated: (id: string) => void;
+}) {
+  return (
+    <div className="p-2">
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-1 flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-[12px] text-muted transition-colors hover:bg-soft hover:text-ink"
+      >
+        <span className="text-[14px] leading-none">‹</span>
+        <span>Back</span>
+      </button>
+      <div className="mx-2 my-1 h-px bg-soft" />
+      <div className="px-2 pb-2 pt-1 text-[10px] uppercase tracking-[0.14em] text-faint">
+        Add someone
+      </div>
+      <div className="px-2 pb-2">
+        <AddPersonForm compact onCancel={onBack} onCreated={onCreated} />
+      </div>
     </div>
   );
 }
@@ -518,14 +600,14 @@ function AvatarCircle({
       <img
         src={person.imageUrl}
         alt=""
-        className="shrink-0 rounded-full object-cover"
+        className="block shrink-0 rounded-full object-cover"
         style={{ width: size, height: size }}
       />
     );
   }
   return (
     <span
-      className="grid shrink-0 place-items-center rounded-full font-medium text-paper transition-colors"
+      className="grid shrink-0 place-items-center rounded-full font-medium leading-none text-paper transition-colors"
       style={{
         width: size,
         height: size,

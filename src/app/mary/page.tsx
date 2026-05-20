@@ -1,12 +1,8 @@
 import Link from "next/link";
-import { getAllStaysForMary } from "@/db/queries";
 import { getCurrentMaryId } from "@/lib/mary";
 import { getPaymentConfig } from "@/lib/payment";
+import { fetchMaryData } from "@/lib/data-source";
 import { MaryChecklist } from "@/components/MaryChecklist";
-
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export default async function MaryPage() {
   const maryId = await getCurrentMaryId();
@@ -33,7 +29,7 @@ export default async function MaryPage() {
   }
 
   const payment = getPaymentConfig();
-  const stays = await getAllStaysForMary(payment);
+  const { stays, today, connected } = await fetchMaryData(payment);
 
   return (
     <main className="flex-1 px-4 pt-6 pb-20 sm:px-10 sm:pt-10">
@@ -46,6 +42,11 @@ export default async function MaryPage() {
             <p className="mt-4 max-w-[520px] text-[14px] leading-relaxed text-muted">
               A simple checklist for Marys to track stays and payment transfers.
             </p>
+            {!connected ? (
+              <p className="mt-2 max-w-[520px] text-[12px] leading-relaxed text-faint">
+                Demo mode: connect a database to persist payment checks.
+              </p>
+            ) : null}
           </div>
           <Link
             href="/"
@@ -54,7 +55,7 @@ export default async function MaryPage() {
             Calendar
           </Link>
         </div>
-        <MaryChecklist stays={stays} today={todayISO()} />
+        <MaryChecklist stays={stays} today={today} />
       </div>
     </main>
   );

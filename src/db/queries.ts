@@ -1,15 +1,17 @@
 import { and, asc, eq, gte, lte, inArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
-import { db } from "./client";
+import { getDb } from "./client";
 import { bookings, people, photos } from "./schema";
 import type { Person, Booking, Photo } from "@/lib/data";
 import type { PaymentConfig } from "@/lib/payment";
+import { nightsBetween } from "@/lib/iso-date";
 
 // People list rarely changes (only when someone updates their name,
 // color, or photo). Cache across requests and invalidate via the
 // 'people' tag from the relevant server actions.
 export const getPeople = unstable_cache(
   async (): Promise<Person[]> => {
+    const db = getDb();
     const rows = await db.select().from(people).orderBy(people.createdAt);
     return rows.map((r) => ({
       id: r.id,
@@ -27,6 +29,7 @@ export async function getBookingsForMonth(
   year: number,
   month: number, // 0-indexed
 ): Promise<Booking[]> {
+  const db = getDb();
   // Month boundaries (with one week of overflow so multi-week stays
   // straddling the visible month are caught)
   const start = new Date(year, month, 1);
@@ -58,12 +61,6 @@ export async function getBookingsForMonth(
   }));
 }
 
-function nightsBetween(start: string, end: string): number {
-  const s = new Date(`${start}T00:00:00Z`).getTime();
-  const e = new Date(`${end}T00:00:00Z`).getTime();
-  return Math.max(1, Math.round((e - s) / 86400000));
-}
-
 export type MaryStay = {
   id: string;
   personName: string;
@@ -78,6 +75,7 @@ export type MaryStay = {
 export async function getAllStaysForMary(
   payment: PaymentConfig | null,
 ): Promise<MaryStay[]> {
+  const db = getDb();
   const rows = await db
     .select({
       id: bookings.id,
@@ -109,6 +107,7 @@ export async function getPhotosForBookings(
   bookingIds: string[],
 ): Promise<Photo[]> {
   if (bookingIds.length === 0) return [];
+  const db = getDb();
   const rows = await db
     .select()
     .from(photos)

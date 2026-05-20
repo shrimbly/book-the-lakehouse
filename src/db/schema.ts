@@ -1,4 +1,5 @@
-import { boolean, pgTable, varchar, text, date, timestamp, index } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, pgTable, varchar, text, date, timestamp, index, check } from "drizzle-orm/pg-core";
 
 export const people = pgTable("people", {
   id: varchar("id", { length: 64 }).primaryKey(),
@@ -23,6 +24,7 @@ export const bookings = pgTable(
   (t) => [
     index("bookings_start_idx").on(t.startDate),
     index("bookings_person_idx").on(t.personId),
+    check("bookings_valid_date_range", sql`${t.startDate} <= ${t.endDate}`),
   ],
 );
 

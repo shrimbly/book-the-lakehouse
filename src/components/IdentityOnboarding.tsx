@@ -4,11 +4,13 @@ import { useState, useTransition } from "react";
 import type { Person } from "@/lib/data";
 import { setIdentity } from "@/app/actions";
 import { siteName } from "@/lib/site";
+import { AddPersonForm } from "./AddPersonForm";
 
 export function IdentityOnboarding({ people }: { people: Person[] }) {
   const [isPending, startTransition] = useTransition();
   const [pickingId, setPickingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
 
   function pick(id: string) {
     if (isPending) return;
@@ -82,17 +84,31 @@ export function IdentityOnboarding({ people }: { people: Person[] }) {
             );
           })}
         </div>
-        <button
-          type="button"
-          disabled={isPending}
+        <div
           style={{ animationDelay: `${240 + people.length * 35}ms` }}
-          className="mt-3 flex w-full items-center gap-3 rounded-[10px] border border-dashed border-rule px-3 py-2.5 text-left text-[13px] text-muted transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 animate-blur-fade"
+          className="animate-blur-fade"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-rule text-[16px] font-medium text-faint shrink-0">
-            +
-          </span>
-          <span className="flex-1">Add someone</span>
-        </button>
+          {adding ? (
+            <div className="mt-3 rounded-[10px] border border-dashed border-rule p-3">
+              <AddPersonForm
+                onCancel={() => setAdding(false)}
+                onCreated={(id) => pick(id)}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setAdding(true)}
+              className="mt-3 flex w-full items-center gap-3 rounded-[10px] border border-dashed border-rule px-3 py-2.5 text-left text-[13px] text-muted transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-rule text-[16px] font-medium text-faint shrink-0">
+                +
+              </span>
+              <span className="flex-1">Add someone</span>
+            </button>
+          )}
+        </div>
         {error ? (
           <p className="mt-4 text-[12px] italic text-faint">{error}</p>
         ) : null}
