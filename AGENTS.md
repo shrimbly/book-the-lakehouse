@@ -25,7 +25,6 @@ npm run db:generate
 npm run db:push
 npm run db:seed
 npm run db:studio
-npm run db:import-xlsx -- ./path/to/calendar.xlsx
 ```
 
 Run `npm run lint` and `npm run build` before handing off code changes when practical.
@@ -41,7 +40,6 @@ Run `npm run lint` and `npm run build` before handing off code changes when prac
 - `src/lib/data.ts` is demo and seed data.
 - `src/lib/data-source.ts` switches between demo data and Neon based on `DATABASE_URL`.
 - `src/lib/site.ts` centralizes reusable branding, metadata, footer text, and cookie prefix defaults.
-- `scripts/` contains spreadsheet inspection/import helpers.
 
 ## Product Constraints
 

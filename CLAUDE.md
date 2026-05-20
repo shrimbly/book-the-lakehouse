@@ -11,7 +11,6 @@ Read `AGENTS.md` first. It is the source of truth for repo conventions, command 
 - Database schema/queries: `src/db/schema.ts`, `src/db/queries.ts`
 - Demo/seed data: `src/lib/data.ts`
 - Branding/config defaults: `src/lib/site.ts`
-- Spreadsheet helpers: `scripts/`
 
 ## Default Workflow
 

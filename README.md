@@ -31,7 +31,6 @@ books their dates, and can see at a glance who is staying when.
 - Upload profile photos and stay photos when Vercel Blob is configured.
 - Run locally with demo data before connecting Neon Postgres.
 - Rename the place, people, footer, PIN, colors, and cookie prefix for your own family.
-- Import older spreadsheet calendars with the helper scripts in `scripts/`.
 - Hand the code to another coding agent with `AGENTS.md` and `CLAUDE.md` already in place.
 
 Mary mode is named for my aunt Mary, who embodies the idea of an admin far
@@ -71,6 +70,17 @@ With only `.env.example` copied, the app can render with demo data. Add
 ## Environment Variables
 
 Create `.env.local` in the project root:
+
+Most of the database, Blob storage, and Vercel-specific values can be created
+for you by the Vercel Neon and Vercel Blob integrations. Once they exist in
+Vercel, pull them down locally with:
+
+```bash
+vercel env pull .env.local
+```
+
+Then add the app-specific bits, like `FAMILY_PIN`, display text, Marys, and any
+optional stay-cost details.
 
 ```bash
 FAMILY_PIN=1234
@@ -121,12 +131,7 @@ Useful database commands:
 
 ```bash
 npm run db:studio
-npm run db:add-people
-npm run db:import-xlsx -- ./path/to/calendar.xlsx
 ```
-
-The spreadsheet importer is intentionally small and opinionated. Treat it as a
-starting point for your old calendar format, not a universal law of spreadsheets.
 
 ## How It Is Organized
 
@@ -138,7 +143,6 @@ starting point for your old calendar format, not a universal law of spreadsheets
 | `src/db/` | Drizzle schema, client, queries, and seed script. |
 | `src/lib/site.ts` | Reusable site branding and cookie configuration. |
 | `src/lib/data.ts` | Demo and seed data for people and sample bookings. |
-| `scripts/` | Spreadsheet inspection, parsing, import, and maintenance helpers. |
 
 ## Scripts
 
