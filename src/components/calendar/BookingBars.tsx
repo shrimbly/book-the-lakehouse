@@ -101,29 +101,29 @@ export function ConfirmBar({
                 <span className="truncate text-[11px] text-muted">
                   pick an end date · {person.first}
                 </span>
+              ) : canEdit ? (
+                <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted">
+                  <span className="truncate">your stay · {person.first}</span>
+                  <span
+                    className="h-[3px] w-[3px] shrink-0 rounded-full bg-faint"
+                    aria-hidden
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditing((value) => !value)}
+                    aria-expanded={editing}
+                    className={[
+                      "shrink-0 font-medium underline-offset-4 transition-colors hover:underline focus-visible:underline focus-visible:outline-none",
+                      editing
+                        ? "text-ink underline decoration-ink"
+                        : "text-muted hover:text-ink",
+                    ].join(" ")}
+                  >
+                    Edit
+                  </button>
+                </span>
               ) : null}
             </div>
-            {canEdit ? (
-              <>
-                <span
-                  className="hidden sm:inline-block h-[3px] w-[3px] shrink-0 rounded-full bg-faint"
-                  aria-hidden
-                />
-                <button
-                  type="button"
-                  onClick={() => setEditing((value) => !value)}
-                  aria-expanded={editing}
-                  className={[
-                    "text-[13px] font-medium underline-offset-4 transition-colors hover:underline focus-visible:underline focus-visible:outline-none",
-                    editing
-                      ? "text-ink underline decoration-ink"
-                      : "text-muted hover:text-ink",
-                  ].join(" ")}
-                >
-                  Edit
-                </button>
-              </>
-            ) : null}
             {conflict ? (
               <div className="hidden text-[11px] italic text-faint sm:ml-1 sm:block sm:max-w-[160px]">
                 overlaps {conflict}&rsquo;s stay
@@ -243,8 +243,19 @@ export function ChoiceBar({
           <PersonChip person={person} />
           <div className="flex min-w-0 flex-1 flex-col leading-tight">
             <StayDateText start={booking.start} end={booking.end} />
-            <span className="truncate text-[11px] text-muted">
-              your stay · {person.first}
+            <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted">
+              <span className="truncate">your stay · {person.first}</span>
+              <span
+                className="h-[3px] w-[3px] shrink-0 rounded-full bg-faint"
+                aria-hidden
+              />
+              <button
+                type="button"
+                onClick={() => closeWith(onEdit)}
+                className="shrink-0 font-medium text-muted underline-offset-4 transition-colors hover:text-ink hover:underline focus-visible:text-ink focus-visible:underline focus-visible:outline-none"
+              >
+                Edit
+              </button>
             </span>
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -255,13 +266,6 @@ export function ChoiceBar({
             >
               <Trash2 size={12} strokeWidth={2.25} />
               Delete
-            </button>
-            <button
-              type="button"
-              onClick={() => closeWith(onEdit)}
-              className="whitespace-nowrap px-1 py-1.5 text-[13px] font-medium text-muted underline-offset-4 transition-colors hover:text-ink hover:underline focus-visible:text-ink focus-visible:underline focus-visible:outline-none"
-            >
-              Edit
             </button>
             <CloseIconButton onClick={close} />
           </div>
