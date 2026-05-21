@@ -85,22 +85,33 @@ export function ConfirmBar({
       <BottomOverlayShell isClosing={isClosing}>
         <div
           className={[
-            "flex w-full flex-col rounded-[12px] sm:rounded-[14px] border border-rule bg-paper shadow-card max-w-[calc(100vw-1.5rem)] sm:w-[480px] origin-bottom transition-transform duration-500 ease-out",
+            "booking-confirm-card flex w-full flex-col rounded-[12px] sm:rounded-[14px] border border-rule bg-paper shadow-card max-w-[calc(100vw-1.5rem)] sm:w-[480px] origin-bottom",
             locked
-              ? "pointer-events-auto -translate-y-3 scale-[1.035]"
-              : "pointer-events-none translate-y-0 scale-100",
+              ? "is-locked pointer-events-auto"
+              : "pointer-events-none",
           ].join(" ")}
         >
           <div className="flex items-center gap-x-2.5 gap-y-2 px-3 py-3 sm:gap-x-4 sm:px-4 sm:py-3">
             <PersonChip person={person} />
             <div className="flex min-w-0 flex-1 flex-col leading-tight">
               <StayDateText start={start} end={end} />
-              {!locked ? (
-                <span className="truncate text-[11px] text-muted">
+              <span className="booking-confirm-meta text-[11px] text-muted">
+                <span
+                  className={[
+                    "booking-confirm-meta-layer truncate",
+                    locked ? "is-hidden" : "is-visible",
+                  ].join(" ")}
+                  aria-hidden={locked}
+                >
                   pick an end date · {person.first}
                 </span>
-              ) : canEdit ? (
-                <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-muted">
+                <span
+                  className={[
+                    "booking-confirm-meta-layer flex min-w-0 items-center gap-1.5",
+                    locked ? "is-visible" : "is-hidden",
+                  ].join(" ")}
+                  aria-hidden={!locked}
+                >
                   <span className="truncate">your stay · {person.first}</span>
                   <span
                     className="h-[3px] w-[3px] shrink-0 rounded-full bg-faint"
@@ -110,6 +121,7 @@ export function ConfirmBar({
                     type="button"
                     onClick={() => setEditing((value) => !value)}
                     aria-expanded={editing}
+                    tabIndex={locked ? 0 : -1}
                     className={[
                       "shrink-0 font-medium underline-offset-4 transition-colors hover:underline focus-visible:underline focus-visible:outline-none",
                       editing
@@ -120,7 +132,7 @@ export function ConfirmBar({
                     Edit
                   </button>
                 </span>
-              ) : null}
+              </span>
             </div>
             {conflict ? (
               <div className="hidden text-[11px] italic text-faint sm:ml-1 sm:block sm:max-w-[160px]">

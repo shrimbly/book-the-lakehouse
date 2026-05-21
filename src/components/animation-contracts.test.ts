@@ -198,6 +198,27 @@ describe("animation contracts", () => {
     expect(bookingBars).not.toContain("confirm-picking");
     expect(bookingBars).not.toContain("key={motionKey}");
     expect(bookingBars).toContain("<BottomOverlayShell isClosing={isClosing}>");
+    expect(bookingBars).toContain("booking-confirm-card");
+    expect(bookingBars).toContain("booking-confirm-meta-layer");
+    expect(bookingBars).toContain("locked ? \"is-visible\" : \"is-hidden\"");
+    expect(cssBlock(".booking-confirm-card")).toContain(
+      "transform 520ms cubic-bezier(0.16, 0.84, 0.44, 1)",
+    );
+    expect(cssBlock(".booking-confirm-card.is-locked")).toContain(
+      "translateY(-0.75rem) scale(1.035)",
+    );
+    expect(cssBlock(".booking-confirm-meta-layer")).toContain(
+      "opacity 320ms cubic-bezier(0.16, 0.84, 0.44, 1)",
+    );
+    expect(cssBlock(".booking-confirm-meta-layer")).toContain(
+      "filter 320ms cubic-bezier(0.16, 0.84, 0.44, 1)",
+    );
+    expect(cssBlock(".booking-confirm-meta-layer")).toContain(
+      "transform 320ms cubic-bezier(0.16, 0.84, 0.44, 1)",
+    );
+    expect(cssBlock(".booking-confirm-meta-layer.is-hidden")).toContain(
+      "filter: blur(5px)",
+    );
   });
 
   it("keeps fullscreen image overlays blurred, scaled, and theme washed", () => {
