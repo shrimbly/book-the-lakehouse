@@ -135,6 +135,18 @@ describe("animation contracts", () => {
     expect(keyframes("avatar-shrink")).toContain("scale(0.78)");
   });
 
+  it("keeps dark overlay ribbons brighter under booking washes", () => {
+    expect(css).toContain(':root[data-theme="dark"]:has(.selection-backdrop)');
+    expect(css).toContain(
+      ":root:not([data-theme]):has(.selection-backdrop)",
+    );
+    expect(css).toContain("--theme-ribbon-fill-color: 58%");
+    expect(css).toContain("--theme-ribbon-fill-paper: 42%");
+    expect(css).toContain("--theme-ribbon-muted-fill-color: 46%");
+    expect(css).toContain("--theme-ribbon-label-ink: 70%");
+    expect(css).toContain("--theme-ribbon-muted-label-muted: 74%");
+  });
+
   it("keeps preview ribbons animating width and position", () => {
     const previewFill = cssBlock(".preview-ribbon-fill");
 

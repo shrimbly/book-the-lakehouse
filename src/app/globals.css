@@ -85,6 +85,17 @@
   color-scheme: dark;
 }
 
+:root[data-theme="dark"]:has(.selection-backdrop) {
+  --theme-ribbon-fill-color: 58%;
+  --theme-ribbon-fill-paper: 42%;
+  --theme-ribbon-muted-fill-color: 46%;
+  --theme-ribbon-muted-fill-soft: 54%;
+  --theme-ribbon-label-color: 30%;
+  --theme-ribbon-label-ink: 70%;
+  --theme-ribbon-muted-label-color: 26%;
+  --theme-ribbon-muted-label-muted: 74%;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --theme-paper: #222222;
@@ -108,6 +119,17 @@
     --theme-ribbon-muted-label-color: 34%;
     --theme-ribbon-muted-label-muted: 66%;
     color-scheme: dark;
+  }
+
+  :root:not([data-theme]):has(.selection-backdrop) {
+    --theme-ribbon-fill-color: 58%;
+    --theme-ribbon-fill-paper: 42%;
+    --theme-ribbon-muted-fill-color: 46%;
+    --theme-ribbon-muted-fill-soft: 54%;
+    --theme-ribbon-label-color: 30%;
+    --theme-ribbon-label-ink: 70%;
+    --theme-ribbon-muted-label-color: 26%;
+    --theme-ribbon-muted-label-muted: 74%;
   }
 }
 
