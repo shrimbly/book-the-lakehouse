@@ -95,7 +95,7 @@ export function IdentityPicker({
 
   useEffect(() => {
     if (!open) return;
-    const onPointer = (e: MouseEvent) => {
+    const onPointer = (e: PointerEvent) => {
       if (
         e.target instanceof Element &&
         e.target.closest("[data-profile-photo-dialog]")
@@ -109,10 +109,10 @@ export function IdentityPicker({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("pointerdown", onPointer, { capture: true });
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("pointerdown", onPointer, { capture: true });
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
