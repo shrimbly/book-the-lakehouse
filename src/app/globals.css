@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-paper: #faf8f4;
-  --color-ink: #2a2a2a;
-  --color-muted: #6b6660;
-  --color-faint: #958f84;
-  --color-rule: #e3ddd1;
-  --color-soft: #ece7dd;
+  --color-paper: var(--theme-paper);
+  --color-ink: var(--theme-ink);
+  --color-muted: var(--theme-muted);
+  --color-faint: var(--theme-faint);
+  --color-rule: var(--theme-rule);
+  --color-soft: var(--theme-soft);
+  --color-avatar-ring: var(--theme-avatar-ring);
+
+  --shadow-card: var(--theme-shadow-card);
+  --shadow-panel: var(--theme-shadow-panel);
+  --shadow-control: var(--theme-shadow-control);
+  --shadow-photo: var(--theme-shadow-photo);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -27,10 +33,116 @@
   --animate-menu-pop: menu-pop 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
+:root {
+  --theme-paper: #faf8f4;
+  --theme-ink: #2a2a2a;
+  --theme-muted: #6b6660;
+  --theme-faint: #958f84;
+  --theme-rule: #e3ddd1;
+  --theme-soft: #ece7dd;
+  --theme-avatar-ring: #ffffff;
+  --theme-shadow-card: 0 16px 40px -16px rgba(60, 40, 20, 0.18), 0 2px 4px -2px rgba(60, 40, 20, 0.05);
+  --theme-shadow-panel: 0 24px 60px -20px rgba(60, 40, 20, 0.25), 0 4px 10px -4px rgba(60, 40, 20, 0.08);
+  --theme-shadow-control: 0 2px 8px -2px rgba(60, 40, 20, 0.15);
+  --theme-shadow-photo: 0 40px 90px -25px rgba(60, 40, 20, 0.45), 0 8px 22px -6px rgba(60, 40, 20, 0.22);
+  --theme-ribbon-fill-color: 30%;
+  --theme-ribbon-fill-paper: 70%;
+  --theme-ribbon-muted-fill-color: 18%;
+  --theme-ribbon-muted-fill-soft: 82%;
+  --theme-ribbon-label-color: 94%;
+  --theme-ribbon-label-ink: 6%;
+  --theme-ribbon-muted-label-color: 64%;
+  --theme-ribbon-muted-label-muted: 36%;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --theme-paper: #2a2a2a;
+  --theme-ink: #faf8f4;
+  --theme-muted: #c8c2b8;
+  --theme-faint: #9f978b;
+  --theme-rule: #46413a;
+  --theme-soft: #38342f;
+  --theme-avatar-ring: #2a2a2a;
+  --theme-shadow-card: 0 18px 44px -18px rgba(0, 0, 0, 0.62), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
+  --theme-shadow-panel: 0 26px 68px -22px rgba(0, 0, 0, 0.7), 0 6px 16px -8px rgba(0, 0, 0, 0.58);
+  --theme-shadow-control: 0 2px 10px -3px rgba(0, 0, 0, 0.6);
+  --theme-shadow-photo: 0 40px 90px -24px rgba(0, 0, 0, 0.78), 0 8px 24px -8px rgba(0, 0, 0, 0.62);
+  --theme-ribbon-fill-color: 40%;
+  --theme-ribbon-fill-paper: 60%;
+  --theme-ribbon-muted-fill-color: 28%;
+  --theme-ribbon-muted-fill-soft: 72%;
+  --theme-ribbon-label-color: 42%;
+  --theme-ribbon-label-ink: 58%;
+  --theme-ribbon-muted-label-color: 34%;
+  --theme-ribbon-muted-label-muted: 66%;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --theme-paper: #2a2a2a;
+    --theme-ink: #faf8f4;
+    --theme-muted: #c8c2b8;
+    --theme-faint: #9f978b;
+    --theme-rule: #46413a;
+    --theme-soft: #38342f;
+    --theme-avatar-ring: #2a2a2a;
+    --theme-shadow-card: 0 18px 44px -18px rgba(0, 0, 0, 0.62), 0 2px 8px -3px rgba(0, 0, 0, 0.5);
+    --theme-shadow-panel: 0 26px 68px -22px rgba(0, 0, 0, 0.7), 0 6px 16px -8px rgba(0, 0, 0, 0.58);
+    --theme-shadow-control: 0 2px 10px -3px rgba(0, 0, 0, 0.6);
+    --theme-shadow-photo: 0 40px 90px -24px rgba(0, 0, 0, 0.78), 0 8px 24px -8px rgba(0, 0, 0, 0.62);
+    --theme-ribbon-fill-color: 40%;
+    --theme-ribbon-fill-paper: 60%;
+    --theme-ribbon-muted-fill-color: 28%;
+    --theme-ribbon-muted-fill-soft: 72%;
+    --theme-ribbon-label-color: 42%;
+    --theme-ribbon-label-ink: 58%;
+    --theme-ribbon-muted-label-color: 34%;
+    --theme-ribbon-muted-label-muted: 66%;
+    color-scheme: dark;
+  }
+}
+
 html, body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(:root.theme-ready) :where(*, *::before, *::after) {
+    transition-property:
+      background-color,
+      border-color,
+      color,
+      fill,
+      stroke,
+      box-shadow,
+      opacity;
+    transition-duration: 260ms;
+    transition-timing-function: cubic-bezier(0.16, 0.84, 0.44, 1);
+  }
+}
+
+.theme-toggle-orb {
+  transition:
+    opacity 540ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    transform 620ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    translate 620ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    scale 620ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    background-color 260ms cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+
+.theme-toggle-icon {
+  transition:
+    opacity 460ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    transform 620ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    translate 620ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    rotate 620ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    scale 620ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    filter 460ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    color 260ms cubic-bezier(0.16, 0.84, 0.44, 1);
 }
 
 .profile-zoom-slider {
@@ -128,6 +240,30 @@ html, body {
 }
 @media (min-width: 640px) {
   .preview-ribbon-exit { --ribbon-edge: 6px; }
+}
+
+.calendar-grid-viewport {
+  --calendar-row-height: 68px;
+  height: calc(var(--calendar-visible-rows) * var(--calendar-row-height));
+  transition: height 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@media (min-width: 640px) {
+  .calendar-grid-viewport {
+    --calendar-row-height: 84px;
+  }
+}
+
+.calendar-scroll-track {
+  transition: transform 640ms cubic-bezier(0.16, 0.84, 0.44, 1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-grid-viewport,
+  .calendar-scroll-track {
+    transition: none;
+  }
 }
 
 @keyframes avatar-pop {

@@ -96,12 +96,9 @@ PAYMENT_NOTE="Please transfer after booking."
 MARY_IDS=mary
 
 NEXT_PUBLIC_HOME_NAME="Book the lakehouse"
-NEXT_PUBLIC_HOME_KIND=lakehouse
-NEXT_PUBLIC_BUILT_BY="Your Name"
 NEXT_PUBLIC_SITE_DESCRIPTION="A private family booking calendar for the lakehouse."
 NEXT_PUBLIC_FOOTER_TEXT="Book the lakehouse"
 NEXT_PUBLIC_REPO_URL="https://github.com/shrimbly/book-the-lakehouse"
-NEXT_PUBLIC_HOME_SLUG=book-the-lakehouse
 COOKIE_PREFIX=book-the-lakehouse
 ```
 

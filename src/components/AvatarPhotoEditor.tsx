@@ -235,12 +235,12 @@ export function AvatarPhotoEditor({
           aria-label={
             shownImageUrl ? "Remove profile photo" : "Add profile photo"
           }
-          className="group relative grid shrink-0 place-items-center overflow-hidden rounded-full border border-rule bg-paper shadow-[inset_0_0_0_1px_rgba(80,60,40,0.03)] transition-colors duration-200 hover:bg-[#fdfbf7] focus:outline-none focus-visible:bg-[#fdfbf7] disabled:cursor-not-allowed disabled:opacity-50"
+          className="group relative grid shrink-0 place-items-center overflow-hidden rounded-full border border-rule bg-paper shadow-control transition-colors duration-200 hover:bg-soft focus:outline-none focus-visible:bg-soft disabled:cursor-not-allowed disabled:opacity-50"
           style={{
             width: avatarSize,
             height: avatarSize,
             boxShadow: shownImageUrl
-              ? "0 7px 18px -10px rgba(60, 40, 20, 0.42), inset 0 0 0 1px rgba(80, 60, 40, 0.03)"
+              ? "var(--theme-shadow-control), inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 3%, transparent)"
               : undefined,
           }}
         >
@@ -290,7 +290,7 @@ export function AvatarPhotoEditor({
               className="fixed inset-0 z-[70] flex flex-col"
               style={{
                 background:
-                  "radial-gradient(ellipse at center, rgba(250, 248, 244, 0.32) 0%, rgba(250, 248, 244, 0.58) 100%)",
+                  "radial-gradient(ellipse at center, color-mix(in srgb, var(--color-paper) 32%, transparent) 0%, color-mix(in srgb, var(--color-paper) 58%, transparent) 100%)",
                 opacity: dialogVisible ? 1 : 0,
                 backdropFilter: dialogVisible ? "blur(4px)" : "blur(0px)",
                 WebkitBackdropFilter: dialogVisible
@@ -317,7 +317,7 @@ export function AvatarPhotoEditor({
                   disabled={isCropping}
                   onClick={closeDialog}
                   aria-label="close"
-                  className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-rule bg-paper/90 text-[18px] sm:text-[20px] leading-none text-ink shadow-[0_2px_8px_-2px_rgba(60,40,20,0.15)] transition-colors hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:opacity-50"
+                  className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-rule bg-paper/90 text-[18px] sm:text-[20px] leading-none text-ink shadow-control transition-colors hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   ×
                 </button>
@@ -332,7 +332,7 @@ export function AvatarPhotoEditor({
                   }
                 }}
               >
-                <div className="w-full max-w-[320px] rounded-[12px] border border-rule bg-paper p-4 shadow-[0_40px_90px_-25px_rgba(60,40,20,0.45),0_8px_22px_-6px_rgba(60,40,20,0.22)]">
+                <div className="w-full max-w-[320px] rounded-[12px] border border-rule bg-paper p-4 shadow-photo">
                   <div className="mb-3 text-[15px] font-medium tracking-[-0.005em]">
                     Crop photo
                   </div>
@@ -443,7 +443,7 @@ function AvatarPreview({
 
   return (
     <span
-      className="grid h-full w-full place-items-center bg-soft text-[24px] font-semibold leading-none text-paper"
+      className="grid h-full w-full place-items-center bg-soft text-[24px] font-semibold leading-none text-[#faf8f4]"
       style={{ backgroundColor: color.startsWith("var(") ? undefined : color }}
     >
       {initial}

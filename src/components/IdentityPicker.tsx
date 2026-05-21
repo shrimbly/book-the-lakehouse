@@ -242,7 +242,7 @@ export function IdentityPicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={`Edit profile for ${current.first}`}
-        className="inline-flex h-[34px] items-center gap-2 rounded-full border border-rule py-1 pl-1 pr-3 text-[12px] leading-none transition-colors hover:border-ink data-[open=true]:border-ink"
+        className="inline-flex h-[34px] items-center gap-2 rounded-full border border-rule py-1 pl-1 pr-3 text-[13px] leading-none transition-colors hover:border-ink data-[open=true]:border-ink"
         data-open={open}
       >
         <AvatarCircle person={current} size={26} fontSize={12} />
@@ -253,7 +253,7 @@ export function IdentityPicker({
         <div
           role="dialog"
           aria-label="Your profile"
-          className="absolute right-0 top-[calc(100%+8px)] z-20 w-[304px] overflow-hidden rounded-[12px] border border-rule bg-paper shadow-[0_16px_40px_-16px_rgba(60,40,20,0.18),0_2px_4px_-2px_rgba(60,40,20,0.05)] origin-top-right"
+          className="absolute right-0 top-[calc(100%+8px)] z-20 w-[304px] overflow-hidden rounded-[12px] border border-rule bg-paper shadow-card origin-top-right"
           style={{
             opacity: menuVisible ? 1 : 0,
             transform: menuVisible
@@ -607,7 +607,7 @@ function AvatarCircle({
   }
   return (
     <span
-      className="grid shrink-0 place-items-center rounded-full font-medium leading-none text-paper transition-colors"
+      className="grid shrink-0 place-items-center rounded-full font-medium leading-none text-[#faf8f4] transition-colors"
       style={{
         width: size,
         height: size,

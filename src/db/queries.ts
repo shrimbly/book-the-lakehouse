@@ -30,14 +30,12 @@ export async function getBookingsForMonth(
   month: number, // 0-indexed
 ): Promise<Booking[]> {
   const db = getDb();
-  // Month boundaries (with one week of overflow so multi-week stays
-  // straddling the visible month are caught)
+  // Month boundaries with the full next month included so cross-month
+  // drag selection can detect conflicts before the route changes.
   const start = new Date(year, month, 1);
-  const end = new Date(year, month + 1, 0);
-  const padStart = new Date(start);
-  padStart.setDate(padStart.getDate() - 7);
-  const padEnd = new Date(end);
-  padEnd.setDate(padEnd.getDate() + 7);
+  const end = new Date(year, month + 2, 0);
+  const padStart = start;
+  const padEnd = end;
   const toISO = (d: Date) => d.toISOString().slice(0, 10);
 
   const rows = await db

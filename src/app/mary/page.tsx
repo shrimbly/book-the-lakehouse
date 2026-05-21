@@ -3,6 +3,7 @@ import { getCurrentMaryId } from "@/lib/mary";
 import { getPaymentConfig } from "@/lib/payment";
 import { fetchMaryData } from "@/lib/data-source";
 import { MaryChecklist } from "@/components/MaryChecklist";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default async function MaryPage() {
   const maryId = await getCurrentMaryId();
@@ -11,6 +12,9 @@ export default async function MaryPage() {
     return (
       <main className="flex flex-1 items-center justify-center px-4 py-12 sm:py-20">
         <div className="w-full max-w-[420px]">
+          <div className="mb-8 flex justify-end">
+            <ThemeToggle />
+          </div>
           <h1 className="m-0 mb-3 text-[42px] font-semibold leading-[0.95] tracking-[-0.04em]">
             Mary mode
           </h1>
@@ -48,12 +52,15 @@ export default async function MaryPage() {
               </p>
             ) : null}
           </div>
-          <Link
-            href="/"
-            className="shrink-0 rounded-full border border-rule px-3 py-1.5 text-[12px] font-medium text-ink transition-colors hover:border-ink"
-          >
-            Calendar
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle />
+            <Link
+              href="/"
+              className="rounded-full border border-rule px-3 py-1.5 text-[12px] font-medium text-ink transition-colors hover:border-ink"
+            >
+              Calendar
+            </Link>
+          </div>
         </div>
         <MaryChecklist stays={stays} today={today} />
       </div>

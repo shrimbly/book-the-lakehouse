@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { unlockPin } from "@/app/actions";
 import { siteName } from "@/lib/site";
+import { ThemeToggle } from "./ThemeToggle";
 
 const LENGTH = 4;
 
@@ -79,11 +80,14 @@ export function PinGate() {
     <main className="flex flex-1 items-center justify-center px-4 py-12 sm:py-20">
       <div className="w-full max-w-[360px]">
         <div
-          className="mb-8 sm:mb-12 flex items-center text-[12px] text-muted animate-blur-fade"
+          className="mb-8 sm:mb-12 flex items-center justify-between text-[12px] text-muted animate-blur-fade"
           style={{ animationDelay: "0ms" }}
         >
-          <span className="mr-2 inline-block h-[5px] w-[5px] -translate-y-[1px] rounded-full bg-ink" />
-          {siteName}
+          <span>
+            <span className="mr-2 inline-block h-[5px] w-[5px] -translate-y-[1px] rounded-full bg-ink" />
+            {siteName}
+          </span>
+          <ThemeToggle />
         </div>
         <h1
           className="m-0 mb-2 text-[36px] sm:text-[44px] font-semibold leading-[0.95] tracking-[-0.04em] animate-blur-fade"

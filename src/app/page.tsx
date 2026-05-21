@@ -9,6 +9,7 @@ import { PinGate } from "@/components/PinGate";
 import { Calendar } from "@/components/Calendar";
 import { MonthSwiper } from "@/components/MonthSwiper";
 import { MonthTitle } from "@/components/MonthTitle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { siteFooterText, siteRepoUrl } from "@/lib/site";
 import { getPaymentConfig } from "@/lib/payment";
 import { isMaryId } from "@/lib/mary";
@@ -52,7 +53,7 @@ export default async function Home({
   }
 
   return (
-    <main className="flex-1 px-4 sm:px-10 pt-4 sm:pt-8 pb-24 sm:pb-20">
+    <main className="flex-1 px-4 sm:px-10 pt-4 sm:pt-8 pb-4 sm:pb-6">
       <MonthSwiper year={year} month={month} />
       <div className="mx-auto max-w-[1200px]">
         <header className="mb-6 sm:mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:gap-8">
@@ -62,11 +63,14 @@ export default async function Home({
             className="text-[52px] font-semibold leading-[0.88] tracking-[-0.05em] sm:tracking-[-0.06em]"
           />
           <div className="flex flex-col items-end gap-2 sm:gap-6">
-            <IdentityPicker
-              people={people}
-              currentId={me.id}
-              showMaryMode={isMaryId(me.id)}
-            />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <IdentityPicker
+                people={people}
+                currentId={me.id}
+                showMaryMode={isMaryId(me.id)}
+              />
+            </div>
             <div className="inline-flex items-center gap-2.5 sm:gap-3.5 pb-0 sm:pb-1.5">
               <YearArrow
                 href={monthHref(year - 1, month)}

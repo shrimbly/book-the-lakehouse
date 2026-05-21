@@ -99,7 +99,7 @@ export function PhotoSheet({
           sheetHidden ? "invisible" : "",
         ].join(" ")}
       >
-        <div className="pointer-events-auto flex max-h-full w-full flex-col overflow-hidden rounded-[14px] border border-rule bg-paper shadow-[0_24px_60px_-20px_rgba(60,40,20,0.25),0_4px_10px_-4px_rgba(60,40,20,0.08)] max-w-[calc(100vw-1.5rem)] sm:max-w-[640px] animate-toast-pop">
+        <div className="pointer-events-auto flex max-h-full w-full flex-col overflow-hidden rounded-[14px] border border-rule bg-paper shadow-panel max-w-[calc(100vw-1.5rem)] sm:max-w-[640px] animate-toast-pop">
           <div className="flex items-center gap-3 border-b border-soft px-4 py-3 sm:px-5 sm:py-4">
             <PersonChip person={person} />
             <div className="flex flex-col leading-tight min-w-0 flex-1">
@@ -172,7 +172,7 @@ export function PhotoSheet({
                           onClick={() => onDelete(p.id)}
                           aria-label="Delete photo"
                           disabled={pending}
-                          className="absolute top-1.5 right-1.5 grid h-6 w-6 place-items-center rounded-full border border-rule bg-paper/85 backdrop-blur-sm text-[14px] leading-none text-ink shadow-[0_2px_6px_-2px_rgba(60,40,20,0.18)] transition-colors hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
+                          className="absolute top-1.5 right-1.5 grid h-6 w-6 place-items-center rounded-full border border-rule bg-paper/85 backdrop-blur-sm text-[14px] leading-none text-ink shadow-control transition-colors hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <span aria-hidden className="block -translate-y-px">
                             ×
@@ -337,7 +337,7 @@ function Lightbox({
           type="button"
           onClick={handleClose}
           aria-label="close"
-          className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-rule bg-paper/90 text-[18px] sm:text-[20px] leading-none text-ink shadow-[0_2px_8px_-2px_rgba(60,40,20,0.15)] transition-colors hover:bg-ink hover:text-paper"
+          className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-rule bg-paper/90 text-[18px] sm:text-[20px] leading-none text-ink shadow-control transition-colors hover:bg-ink hover:text-paper"
         >
           ×
         </button>
@@ -353,7 +353,7 @@ function Lightbox({
         <img
           src={photo.url}
           alt=""
-          className="max-h-full max-w-full object-contain rounded-[10px] shadow-[0_40px_90px_-25px_rgba(60,40,20,0.45),0_8px_22px_-6px_rgba(60,40,20,0.22)]"
+          className="max-h-full max-w-full object-contain rounded-[10px] shadow-photo"
         />
         {onPrev ? (
           <button

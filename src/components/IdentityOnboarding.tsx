@@ -5,6 +5,7 @@ import type { Person } from "@/lib/data";
 import { setIdentity } from "@/app/actions";
 import { siteName } from "@/lib/site";
 import { AddPersonForm } from "./AddPersonForm";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function IdentityOnboarding({ people }: { people: Person[] }) {
   const [isPending, startTransition] = useTransition();
@@ -29,11 +30,14 @@ export function IdentityOnboarding({ people }: { people: Person[] }) {
     <main className="flex flex-1 items-center justify-center px-4 py-12 sm:py-20">
       <div className="w-full max-w-[420px]">
         <div
-          className="mb-8 sm:mb-12 flex items-center text-[12px] text-muted animate-blur-fade"
+          className="mb-8 sm:mb-12 flex items-center justify-between text-[12px] text-muted animate-blur-fade"
           style={{ animationDelay: "0ms" }}
         >
-          <span className="mr-2 inline-block h-[5px] w-[5px] -translate-y-[1px] rounded-full bg-ink" />
-          {siteName}
+          <span>
+            <span className="mr-2 inline-block h-[5px] w-[5px] -translate-y-[1px] rounded-full bg-ink" />
+            {siteName}
+          </span>
+          <ThemeToggle />
         </div>
         <h1
           className="m-0 mb-2 text-[44px] sm:text-[56px] font-semibold leading-[0.95] tracking-[-0.04em] animate-blur-fade"
