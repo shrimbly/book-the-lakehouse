@@ -129,7 +129,7 @@ export function ConfirmBar({
                 overlaps {conflict}&rsquo;s stay
               </div>
             ) : null}
-            <div className="ml-auto flex shrink-0 items-center gap-1.5">
+            <div className="ml-auto flex shrink-0 items-center gap-2.5 sm:gap-1.5">
               <button
                 type="button"
                 onClick={() => closeWith(onConfirm)}
