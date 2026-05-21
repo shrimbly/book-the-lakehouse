@@ -162,12 +162,7 @@ export function MonthSwiper({
       startX = e.clientX;
       startY = e.clientY;
       setGesturePreview(0);
-      const target = e.target as HTMLElement | null;
-      // Don't hijack swipes that begin on calendar cells (drag-select)
-      // or any element that opts out explicitly.
-      blocked = !!(
-        target?.closest("[data-iso]") || target?.closest("[data-noswipe]")
-      );
+      blocked = shouldIgnoreGestureTarget(e.target);
     }
 
     function onMove(e: PointerEvent) {
@@ -176,6 +171,7 @@ export function MonthSwiper({
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
       const horizontalIntent = Math.abs(dx) > Math.abs(dy) * SWIPE_RATIO;
+      if (horizontalIntent) e.preventDefault();
       setGesturePreview(
         horizontalIntent ? Math.abs(dx) / SWIPE_DISTANCE_PX : 0,
         dx,
@@ -211,7 +207,7 @@ export function MonthSwiper({
     }
 
     window.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointermove", onMove, { passive: false });
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onCancel);
     return () => {

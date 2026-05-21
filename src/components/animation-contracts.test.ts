@@ -68,6 +68,9 @@ describe("animation contracts", () => {
     expect(cssBlock("main.month-gesture-preview")).toContain(
       "will-change: filter, transform",
     );
+    expect(cssBlock("html, body")).toContain("overflow-x: hidden");
+    expect(cssBlock("html, body")).toContain("overscroll-behavior-x: none");
+    expect(cssBlock("main")).toContain("touch-action: pan-y");
     expect(css).toContain("filter: none;");
     expect(css).toContain("transform: none;");
     expect(monthSwiper).toContain("let monthNavigationLockedUntil = 0");
@@ -83,6 +86,12 @@ describe("animation contracts", () => {
     expect(monthSwiper).toContain("const blurProgress = 1 - (1 - clamped) ** 1.35");
     expect(monthSwiper).toContain('"--month-gesture-x"');
     expect(monthSwiper).toContain('"--month-gesture-blur"');
+    expect(monthSwiper).toContain("blocked = shouldIgnoreGestureTarget(e.target)");
+    expect(monthSwiper).toContain("if (horizontalIntent) e.preventDefault()");
+    expect(monthSwiper).toContain(
+      'window.addEventListener("pointermove", onMove, { passive: false })',
+    );
+    expect(monthSwiper).not.toContain('target?.closest("[data-iso]")');
     expect(monthSwiper).not.toContain("MONTH_GESTURE_SCALE");
     expect(monthSwiper).not.toContain('"--month-gesture-scale"');
     expect(cssBlock("main.month-gesture-preview")).not.toContain("scale3d");
