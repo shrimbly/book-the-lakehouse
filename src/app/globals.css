@@ -85,17 +85,6 @@
   color-scheme: dark;
 }
 
-:root[data-theme="dark"]:has(.selection-backdrop) {
-  --theme-ribbon-fill-color: 58%;
-  --theme-ribbon-fill-paper: 42%;
-  --theme-ribbon-muted-fill-color: 46%;
-  --theme-ribbon-muted-fill-soft: 54%;
-  --theme-ribbon-label-color: 30%;
-  --theme-ribbon-label-ink: 70%;
-  --theme-ribbon-muted-label-color: 26%;
-  --theme-ribbon-muted-label-muted: 74%;
-}
-
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --theme-paper: #222222;
@@ -121,16 +110,6 @@
     color-scheme: dark;
   }
 
-  :root:not([data-theme]):has(.selection-backdrop) {
-    --theme-ribbon-fill-color: 58%;
-    --theme-ribbon-fill-paper: 42%;
-    --theme-ribbon-muted-fill-color: 46%;
-    --theme-ribbon-muted-fill-soft: 54%;
-    --theme-ribbon-label-color: 30%;
-    --theme-ribbon-label-ink: 70%;
-    --theme-ribbon-muted-label-color: 26%;
-    --theme-ribbon-muted-label-muted: 74%;
-  }
 }
 
 html, body {
@@ -455,11 +434,59 @@ main.month-gesture-preview {
   width: calc(var(--rw) - ((var(--ol) + var(--or)) * var(--ribbon-edge)));
   transition:
     left 220ms cubic-bezier(0.32, 0.72, 0.4, 1),
-    width 220ms cubic-bezier(0.32, 0.72, 0.4, 1);
+    width 220ms cubic-bezier(0.32, 0.72, 0.4, 1),
+    filter 220ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    opacity 220ms cubic-bezier(0.16, 0.84, 0.44, 1),
+    box-shadow 220ms cubic-bezier(0.16, 0.84, 0.44, 1);
 }
 @media (min-width: 640px) {
   .preview-ribbon-fill { --ribbon-edge: 6px; }
 }
+
+.preview-ribbon-fill.is-editing {
+  opacity: 0.95;
+  filter: saturate(1.12) brightness(1.06);
+  z-index: 7;
+}
+
+.preview-avatar.is-editing {
+  opacity: 0.95;
+  filter: saturate(1.1) brightness(1.04);
+  z-index: 12;
+}
+
+:root[data-theme="dark"] .preview-ribbon-fill.is-editing {
+  --theme-ribbon-fill-color: 72%;
+  --theme-ribbon-fill-paper: 28%;
+  --theme-ribbon-label-color: 18%;
+  --theme-ribbon-label-ink: 82%;
+  opacity: 1;
+  filter: saturate(1.24) brightness(1.16);
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent), 0 8px 18px -12px rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="dark"] .preview-avatar.is-editing {
+  opacity: 1;
+  filter: saturate(1.18) brightness(1.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .preview-ribbon-fill.is-editing {
+    --theme-ribbon-fill-color: 72%;
+    --theme-ribbon-fill-paper: 28%;
+    --theme-ribbon-label-color: 18%;
+    --theme-ribbon-label-ink: 82%;
+    opacity: 1;
+    filter: saturate(1.24) brightness(1.16);
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent), 0 8px 18px -12px rgba(0, 0, 0, 0.85);
+  }
+
+  :root:not([data-theme]) .preview-avatar.is-editing {
+    opacity: 1;
+    filter: saturate(1.18) brightness(1.12);
+  }
+}
+
 @starting-style {
   .preview-ribbon-fill { width: 0; }
 }

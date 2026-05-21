@@ -7,6 +7,10 @@ const bookingBars = readFileSync(
   "utf8",
 );
 const calendar = readFileSync("src/components/Calendar.tsx", "utf8");
+const calendarGrid = readFileSync(
+  "src/components/calendar/CalendarGrid.tsx",
+  "utf8",
+);
 const photoSheet = readFileSync("src/components/PhotoSheet.tsx", "utf8");
 const avatarPhotoEditor = readFileSync(
   "src/components/AvatarPhotoEditor.tsx",
@@ -135,16 +139,22 @@ describe("animation contracts", () => {
     expect(keyframes("avatar-shrink")).toContain("scale(0.78)");
   });
 
-  it("keeps dark overlay ribbons brighter under booking washes", () => {
-    expect(css).toContain(':root[data-theme="dark"]:has(.selection-backdrop)');
-    expect(css).toContain(
-      ":root:not([data-theme]):has(.selection-backdrop)",
+  it("keeps the edited booking preview lifted in dark mode", () => {
+    expect(cssBlock(".preview-ribbon-fill.is-editing")).toContain("opacity: 0.95");
+    expect(cssBlock(".preview-ribbon-fill.is-editing")).toContain(
+      "filter: saturate(1.12) brightness(1.06)",
     );
-    expect(css).toContain("--theme-ribbon-fill-color: 58%");
-    expect(css).toContain("--theme-ribbon-fill-paper: 42%");
-    expect(css).toContain("--theme-ribbon-muted-fill-color: 46%");
-    expect(css).toContain("--theme-ribbon-label-ink: 70%");
-    expect(css).toContain("--theme-ribbon-muted-label-muted: 74%");
+    expect(css).toContain(
+      ':root[data-theme="dark"] .preview-ribbon-fill.is-editing',
+    );
+    expect(css).toContain("--theme-ribbon-fill-color: 72%");
+    expect(css).toContain("--theme-ribbon-fill-paper: 28%");
+    expect(css).toContain("--theme-ribbon-label-ink: 82%");
+    expect(css).toContain(".preview-avatar.is-editing");
+    expect(calendarGrid).toContain("data-preview-ribbon={editing && !exiting");
+    expect(calendarGrid).toContain("data-booking-ribbon={row.bookingId}");
+    expect(calendarGrid).toContain("editing={editingId != null}");
+    expect(calendarGrid).toContain('editing && !exiting ? "is-editing" : ""');
   });
 
   it("keeps preview ribbons animating width and position", () => {

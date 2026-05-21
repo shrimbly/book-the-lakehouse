@@ -190,6 +190,7 @@ export function CalendarGrid({
               row={row}
               index={index}
               person={me}
+              editing={editingId != null}
             />
           ))}
 
@@ -204,7 +205,11 @@ export function CalendarGrid({
           ))}
 
           {previewRows[0] ? (
-            <PreviewAvatar row={previewRows[0]} person={me} />
+            <PreviewAvatar
+              row={previewRows[0]}
+              person={me}
+              editing={editingId != null}
+            />
           ) : null}
 
           {exitingPreviewAvatar ? (
@@ -392,6 +397,7 @@ function BookingRibbon({
 }) {
   return (
     <div
+      data-booking-ribbon={row.bookingId}
       onClick={
         isOwn && !pickStart && !isExiting
           ? () => onSelectBooking(row.bookingId)
@@ -500,11 +506,13 @@ function PreviewRibbon({
   index,
   person,
   exiting = false,
+  editing = false,
 }: {
   row: RowRibbon;
   index: number;
   person: Person;
   exiting?: boolean;
+  editing?: boolean;
 }) {
   return (
     <div
@@ -512,10 +520,12 @@ function PreviewRibbon({
       className="pointer-events-none relative"
     >
       <div
+        data-preview-ribbon={editing && !exiting ? "editing" : "selection"}
         className={[
           exiting
             ? "preview-ribbon-exit absolute bottom-1.5 sm:bottom-2.5 z-[6] flex h-[20px] sm:h-[26px] origin-left items-center overflow-hidden text-[10px] sm:text-[11px] font-medium tracking-[-0.005em] opacity-70 pr-1.5 sm:pr-2 animate-ribbon-shrink"
             : "preview-ribbon-fill absolute bottom-1.5 sm:bottom-2.5 z-[5] flex h-[20px] sm:h-[26px] items-center overflow-hidden text-[10px] sm:text-[11px] font-medium tracking-[-0.005em] opacity-70 pr-1.5 sm:pr-2",
+          editing && !exiting ? "is-editing" : "",
           index === 0 ? "pl-[30px] sm:pl-[42px]" : "pl-1.5 sm:pl-2",
           ribbonRadius(row),
         ].join(" ")}
@@ -540,16 +550,19 @@ function PreviewAvatar({
   row,
   person,
   exiting = false,
+  editing = false,
 }: {
   row: RowRibbon;
   person: Person;
   exiting?: boolean;
+  editing?: boolean;
 }) {
   return (
     <div
       className={[
-        "pointer-events-none z-10 grid h-[26px] w-[26px] sm:h-[34px] sm:w-[34px] translate-y-px place-items-center self-end justify-self-start overflow-hidden rounded-[5px] sm:rounded-[6px] border border-avatar-ring text-[11px] sm:text-[12px] font-semibold text-[#faf8f4] opacity-70 shadow-control mb-1.5 sm:mb-2.5 ml-1 sm:ml-1.5",
+        "preview-avatar pointer-events-none z-10 grid h-[26px] w-[26px] sm:h-[34px] sm:w-[34px] translate-y-px place-items-center self-end justify-self-start overflow-hidden rounded-[5px] sm:rounded-[6px] border border-avatar-ring text-[11px] sm:text-[12px] font-semibold text-[#faf8f4] opacity-70 shadow-control mb-1.5 sm:mb-2.5 ml-1 sm:ml-1.5",
         exiting ? "animate-avatar-shrink" : "animate-avatar-pop",
+        editing && !exiting ? "is-editing" : "",
       ].join(" ")}
       style={{
         gridColumn: row.startCol,
