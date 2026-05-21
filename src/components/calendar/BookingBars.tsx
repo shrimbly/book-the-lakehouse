@@ -49,7 +49,6 @@ export function ConfirmBar({
   const [editing, setEditing] = useState(false);
   const { isClosing, close, closeWith } = useAnimatedClose(onCancel);
   const canEdit = locked;
-  const motionKey = locked ? "confirm-locked" : "confirm-picking";
   const confirmLabel =
     mode === "edit"
       ? pending
@@ -79,12 +78,11 @@ export function ConfirmBar({
     <>
       {locked ? (
         <OverlayBackdrop
-          key={`backdrop-${motionKey}`}
           onPointerDown={close}
           isClosing={isClosing}
         />
       ) : null}
-      <BottomOverlayShell key={motionKey} isClosing={isClosing}>
+      <BottomOverlayShell isClosing={isClosing}>
         <div
           className={[
             "flex w-full flex-col rounded-[12px] sm:rounded-[14px] border border-rule bg-paper shadow-card max-w-[calc(100vw-1.5rem)] sm:w-[480px] origin-bottom transition-transform duration-500 ease-out",

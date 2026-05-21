@@ -194,12 +194,10 @@ describe("animation contracts", () => {
     expect(overlayPrimitives).toContain("selection-backdrop fixed inset-0");
     expect(overlayPrimitives).toContain("selection-panel pointer-events-none");
     expect(overlayPrimitives).toContain('isClosing ? "is-closing" : ""');
-    expect(bookingBars).toContain(
-      'const motionKey = locked ? "confirm-locked" : "confirm-picking"',
-    );
     expect(bookingBars).toContain("onClick={() => closeWith(onEdit)}");
-    expect(bookingBars).toContain("key={`backdrop-${motionKey}`}");
-    expect(bookingBars).toContain("key={motionKey}");
+    expect(bookingBars).not.toContain("confirm-picking");
+    expect(bookingBars).not.toContain("key={motionKey}");
+    expect(bookingBars).toContain("<BottomOverlayShell isClosing={isClosing}>");
   });
 
   it("keeps fullscreen image overlays blurred, scaled, and theme washed", () => {
