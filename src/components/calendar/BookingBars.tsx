@@ -129,18 +129,21 @@ export function ConfirmBar({
                 overlaps {conflict}&rsquo;s stay
               </div>
             ) : null}
-            <div className="ml-auto flex shrink-0 items-center gap-1">
+            <div className="ml-auto flex shrink-0 items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => closeWith(onConfirm)}
                 disabled={
                   !locked || !!conflict || pending || !hasChanges || isClosing
                 }
-                className="pointer-events-auto whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-[12px] font-medium text-paper shadow-control transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25 sm:px-4"
+                className="pointer-events-auto whitespace-nowrap rounded-full bg-ink px-[clamp(12px,3.2vw,16px)] py-[clamp(6px,1.8vw,8px)] text-[clamp(12px,3.15vw,13px)] font-medium text-paper shadow-control transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25"
               >
                 {confirmLabel}
               </button>
-              <CloseIconButton onClick={close} />
+              <CloseIconButton
+                onClick={close}
+                className="h-[clamp(30px,8vw,34px)] w-[clamp(30px,8vw,34px)]"
+              />
             </div>
           </div>
           {canEdit ? (
@@ -258,16 +261,19 @@ export function ChoiceBar({
               </button>
             </span>
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <button
               type="button"
               onClick={() => closeWith(onDelete)}
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-rule bg-paper/70 px-2.5 py-1.5 text-[12px] font-medium text-ink shadow-control transition-colors hover:border-ink sm:px-3"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-rule bg-paper/70 px-[clamp(10px,2.7vw,14px)] py-[clamp(6px,1.8vw,8px)] text-[clamp(12px,3.15vw,13px)] font-medium text-ink shadow-control transition-colors hover:border-ink"
             >
               <Trash2 size={12} strokeWidth={2.25} />
               Delete
             </button>
-            <CloseIconButton onClick={close} />
+            <CloseIconButton
+              onClick={close}
+              className="h-[clamp(30px,8vw,34px)] w-[clamp(30px,8vw,34px)]"
+            />
           </div>
         </div>
       </BottomOverlayShell>
@@ -312,17 +318,20 @@ export function DeleteBar({
               {nights} night{nights === 1 ? "" : "s"}
             </span>
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <button
               type="button"
               onClick={() => closeWith(onDelete)}
               disabled={pending || isClosing}
-              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-[12px] font-medium text-paper shadow-control transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25 sm:px-4"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-[clamp(12px,3.2vw,16px)] py-[clamp(6px,1.8vw,8px)] text-[clamp(12px,3.15vw,13px)] font-medium text-paper shadow-control transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-25"
             >
               {!pending ? <Trash2 size={12} strokeWidth={2.25} /> : null}
               {pending ? "Removing…" : "Delete"}
             </button>
-            <CloseIconButton onClick={close} />
+            <CloseIconButton
+              onClick={close}
+              className="h-[clamp(30px,8vw,34px)] w-[clamp(30px,8vw,34px)]"
+            />
           </div>
         </div>
       </BottomOverlayShell>

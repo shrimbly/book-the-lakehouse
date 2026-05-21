@@ -361,6 +361,7 @@ function ProfileView({
           initial={current.initial}
           color={current.color}
           imageUrl={current.imageUrl}
+          size="compact"
           disabled={isPending}
           isSaving={isUploadingImage}
           onSave={onPhotoSave}
@@ -373,7 +374,7 @@ function ProfileView({
           <button
             type="button"
             onClick={() => setIsEditingName((value) => !value)}
-            className="group mt-0.5 inline-flex max-w-full items-center gap-1.5 text-left text-[15px] font-medium tracking-[-0.005em] underline decoration-transparent decoration-[1px] underline-offset-[3px] transition-colors hover:decoration-ink focus:outline-none focus-visible:decoration-ink"
+            className="group mt-0.5 inline-flex max-w-full items-center gap-1.5 text-left text-[17px] font-medium tracking-[-0.005em] underline decoration-transparent decoration-[1px] underline-offset-[3px] transition-colors hover:decoration-ink focus:outline-none focus-visible:decoration-ink sm:text-[15px]"
           >
             <span className="truncate">{current.first}</span>
             <Pencil
