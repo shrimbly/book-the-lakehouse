@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import type { Person } from "@/lib/data";
 import {
   setIdentity,
@@ -250,19 +251,35 @@ export function IdentityPicker({
       </button>
 
       {renderMenu ? (
-        <div
-          role="dialog"
-          aria-label="Your profile"
-          className="absolute right-0 top-[calc(100%+8px)] z-20 w-[304px] overflow-hidden rounded-[12px] border border-rule bg-paper shadow-card origin-top-right"
-          style={{
-            opacity: menuVisible ? 1 : 0,
-            transform: menuVisible
-              ? "translateY(0) scale(1)"
-              : "translateY(-6px) scale(0.96)",
-            transition:
-              "opacity 220ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1)",
-          }}
-        >
+        <>
+          {createPortal(
+            <div
+              aria-hidden
+              onPointerDown={() => setOpen(false)}
+              className="themed-overlay-wash fixed inset-0 z-10"
+              style={{
+                opacity: menuVisible ? 1 : 0,
+                backdropFilter: menuVisible ? "blur(4px)" : "blur(0px)",
+                WebkitBackdropFilter: menuVisible ? "blur(4px)" : "blur(0px)",
+                transition:
+                  "opacity 260ms cubic-bezier(0.16, 0.84, 0.44, 1), backdrop-filter 260ms cubic-bezier(0.16, 0.84, 0.44, 1), -webkit-backdrop-filter 260ms cubic-bezier(0.16, 0.84, 0.44, 1)",
+              }}
+            />,
+            document.body,
+          )}
+          <div
+            role="dialog"
+            aria-label="Your profile"
+            className="absolute right-0 top-[calc(100%+8px)] z-20 w-[304px] overflow-hidden rounded-[12px] border border-rule bg-paper shadow-card origin-top-right"
+            style={{
+              opacity: menuVisible ? 1 : 0,
+              transform: menuVisible
+                ? "translateY(0) scale(1)"
+                : "translateY(-6px) scale(0.96)",
+              transition:
+                "opacity 220ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+            }}
+          >
           <div
             style={{
               opacity: viewVisible ? 1 : 0,
@@ -308,7 +325,8 @@ export function IdentityPicker({
               )
             )}
           </div>
-        </div>
+          </div>
+        </>
       ) : null}
     </div>
   );

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { cleanup } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { IdentityPicker } from "./IdentityPicker";
@@ -52,6 +52,28 @@ describe("IdentityPicker outside interactions", () => {
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
 
     fireEvent.pointerDown(screen.getByTestId("calendar-cell"));
+
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("renders a themed blur wash behind the open menu", async () => {
+    render(<IdentityPicker people={people} currentId="mary" />);
+
+    const trigger = screen.getByRole("button", {
+      name: "Edit profile for Mary",
+    });
+
+    fireEvent.click(trigger);
+
+    await waitFor(() => {
+      expect(document.querySelector(".themed-overlay-wash")).toBeTruthy();
+    });
+
+    const wash = document.querySelector(".themed-overlay-wash") as HTMLElement;
+    expect(wash.className).toContain("fixed inset-0");
+    expect(wash.style.backdropFilter).toBe("blur(4px)");
+
+    fireEvent.pointerDown(wash);
 
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
   });
