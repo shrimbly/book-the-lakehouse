@@ -237,7 +237,13 @@ export function ConfirmBar({
           <div className="flex items-center gap-x-2.5 gap-y-2 px-3 py-3 sm:gap-x-4 sm:px-4 sm:py-3">
             <PersonChip person={person} />
             <div className="flex min-w-0 flex-1 flex-col leading-tight">
-              <StayDateText start={start} end={end} />
+              {locked ? (
+                <StayDateText start={start} end={end} />
+              ) : (
+                <span className="truncate whitespace-nowrap text-[clamp(13px,3.75vw,15px)] font-semibold sm:text-[14px]">
+                  Pick an end date
+                </span>
+              )}
               <span className="booking-confirm-meta text-[11px] text-muted">
                 <span
                   className={[
@@ -246,7 +252,7 @@ export function ConfirmBar({
                   ].join(" ")}
                   aria-hidden={locked}
                 >
-                  pick an end date · {person.first}
+                  starts {fmtDay(start)} · {person.first}
                 </span>
                 <span
                   className={[

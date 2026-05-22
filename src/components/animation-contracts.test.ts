@@ -140,21 +140,29 @@ describe("animation contracts", () => {
   });
 
   it("keeps the edited booking preview lifted in dark mode", () => {
-    expect(cssBlock(".preview-ribbon-fill.is-editing")).toContain("opacity: 0.95");
+    expect(cssBlock(".preview-ribbon-fill.is-editing")).toContain("opacity: 1");
     expect(cssBlock(".preview-ribbon-fill.is-editing")).toContain(
-      "filter: saturate(1.12) brightness(1.06)",
+      "z-index: 25",
     );
     expect(css).toContain(
       ':root[data-theme="dark"] .preview-ribbon-fill.is-editing',
     );
-    expect(css).toContain("--theme-ribbon-fill-color: 72%");
-    expect(css).toContain("--theme-ribbon-fill-paper: 28%");
-    expect(css).toContain("--theme-ribbon-label-ink: 82%");
+    expect(css).toContain("--theme-ribbon-fill-color: 100%");
+    expect(css).toContain("--theme-ribbon-fill-paper: 0%");
+    expect(css).toContain("--theme-ribbon-label-ink: 100%");
+    expect(css).toContain("filter: saturate(1.35) brightness(1.22)");
     expect(css).toContain(".preview-avatar.is-editing");
     expect(calendarGrid).toContain("data-preview-ribbon={editing && !exiting");
     expect(calendarGrid).toContain("data-booking-ribbon={row.bookingId}");
     expect(calendarGrid).toContain("editing={editingId != null}");
     expect(calendarGrid).toContain('editing && !exiting ? "is-editing" : ""');
+  });
+
+  it("keeps the initial booking bar focused on the next action", () => {
+    expect(bookingBars).toContain("Pick an end date");
+    expect(bookingBars).toContain("starts {fmtDay(start)} · {person.first}");
+    expect(bookingBars).toContain("locked ? (");
+    expect(bookingBars).toContain("<StayDateText start={start} end={end} />");
   });
 
   it("keeps preview ribbons animating width and position", () => {

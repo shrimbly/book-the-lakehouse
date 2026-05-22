@@ -444,46 +444,47 @@ main.month-gesture-preview {
 }
 
 .preview-ribbon-fill.is-editing {
-  opacity: 0.95;
-  filter: saturate(1.12) brightness(1.06);
-  z-index: 7;
+  opacity: 1;
+  filter: saturate(1.2) brightness(1.1);
+  z-index: 25;
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 28%, transparent), 0 10px 20px -12px rgba(0, 0, 0, 0.55);
 }
 
 .preview-avatar.is-editing {
-  opacity: 0.95;
-  filter: saturate(1.1) brightness(1.04);
-  z-index: 12;
+  opacity: 1;
+  filter: saturate(1.16) brightness(1.08);
+  z-index: 26;
 }
 
 :root[data-theme="dark"] .preview-ribbon-fill.is-editing {
-  --theme-ribbon-fill-color: 72%;
-  --theme-ribbon-fill-paper: 28%;
-  --theme-ribbon-label-color: 18%;
-  --theme-ribbon-label-ink: 82%;
+  --theme-ribbon-fill-color: 100%;
+  --theme-ribbon-fill-paper: 0%;
+  --theme-ribbon-label-color: 0%;
+  --theme-ribbon-label-ink: 100%;
   opacity: 1;
-  filter: saturate(1.24) brightness(1.16);
-  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent), 0 8px 18px -12px rgba(0, 0, 0, 0.85);
+  filter: saturate(1.35) brightness(1.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 42%, transparent), 0 0 22px -10px currentColor, 0 12px 24px -14px rgba(0, 0, 0, 0.9);
 }
 
 :root[data-theme="dark"] .preview-avatar.is-editing {
   opacity: 1;
-  filter: saturate(1.18) brightness(1.12);
+  filter: saturate(1.25) brightness(1.18);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) .preview-ribbon-fill.is-editing {
-    --theme-ribbon-fill-color: 72%;
-    --theme-ribbon-fill-paper: 28%;
-    --theme-ribbon-label-color: 18%;
-    --theme-ribbon-label-ink: 82%;
+    --theme-ribbon-fill-color: 100%;
+    --theme-ribbon-fill-paper: 0%;
+    --theme-ribbon-label-color: 0%;
+    --theme-ribbon-label-ink: 100%;
     opacity: 1;
-    filter: saturate(1.24) brightness(1.16);
-    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent), 0 8px 18px -12px rgba(0, 0, 0, 0.85);
+    filter: saturate(1.35) brightness(1.22);
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 42%, transparent), 0 0 22px -10px currentColor, 0 12px 24px -14px rgba(0, 0, 0, 0.9);
   }
 
   :root:not([data-theme]) .preview-avatar.is-editing {
     opacity: 1;
-    filter: saturate(1.18) brightness(1.12);
+    filter: saturate(1.25) brightness(1.18);
   }
 }
 
