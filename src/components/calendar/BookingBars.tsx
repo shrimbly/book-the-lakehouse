@@ -133,11 +133,9 @@ export function ConfirmBar({
   }
 
   function toggleEditing() {
-    setEditing((value) => {
-      const next = !value;
-      onEditControlsChange?.(next);
-      return next;
-    });
+    const next = !editing;
+    setEditing(next);
+    onEditControlsChange?.(next);
   }
 
   useEffect(() => {
