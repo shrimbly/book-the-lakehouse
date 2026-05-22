@@ -375,6 +375,12 @@ describe("animation contracts", () => {
     expect(bookingTutorial).toContain('"drag"');
     expect(bookingTutorial).toContain('"edit"');
     expect(bookingTutorial).toContain('"delete"');
+    expect(bookingTutorial).toContain("top-[max(1rem,env(safe-area-inset-top))]");
+    expect(bookingTutorial).not.toContain("bottom-[150px]");
+    expect(bookingTutorial).toContain("tutorialEditIndicator");
+    expect(bookingTutorial).toContain("const TUTORIAL_EXIT_MS = 260");
+    expect(bookingTutorial).toContain("setIsClosing(true)");
+    expect(bookingTutorial).toContain('isClosing ? "is-closing" : ""');
     expect(bookingTutorial).not.toContain("createBooking");
     expect(bookingTutorial).not.toContain("updateBooking");
     expect(bookingTutorial).not.toContain("deleteBooking");
@@ -384,16 +390,38 @@ describe("animation contracts", () => {
     expect(calendarGrid).toContain("tutorialOverlay?.previewRows");
     expect(calendarGrid).toContain("tutorialOverlay?.bookingRows");
     expect(calendarGrid).toContain("data-booking-tutorial-pointer");
+    expect(calendarGrid).toContain("gridColumnEnd");
+    expect(calendarGrid).toContain('"--tutorial-drag-x"');
     expect(identityPicker).toContain("How to book");
     expect(identityPicker).toContain("BOOKING_TUTORIAL_OPEN_EVENT");
+    expect(bookingBars).toContain("tutorialEditIndicator?: boolean");
+    expect(bookingBars).toContain("data-booking-tutorial-edit-pointer");
+    expect(cssBlock(".booking-tutorial-edit-pointer")).toContain(
+      "animation: tutorial-pointer-tap 1800ms",
+    );
+    expect(cssBlock(".booking-tutorial-card.is-closing")).toContain(
+      "animation: tutorial-card-out 260ms",
+    );
+    expect(cssBlock(".booking-tutorial-wash.is-closing")).toContain(
+      "animation: tutorial-wash-out 260ms",
+    );
+    expect(keyframes("tutorial-card-out")).toContain("filter: blur(6px)");
+    expect(keyframes("tutorial-wash-out")).toContain("opacity: 0");
     expect(cssBlock(".booking-tutorial-pointer")).toContain(
+      "display: grid",
+    );
+    expect(cssBlock(".booking-tutorial-pointer span")).toContain(
       "animation: tutorial-pointer-tap 1800ms",
     );
     expect(cssBlock('.booking-tutorial-pointer[data-booking-tutorial-pointer="drag"]')).toContain(
-      "animation-name: tutorial-pointer-drag",
+      "justify-items: start",
     );
+    expect(
+      cssBlock('.booking-tutorial-pointer[data-booking-tutorial-pointer="drag"] span'),
+    ).toContain("animation-name: tutorial-pointer-drag");
     expect(keyframes("tutorial-pointer-drag")).toContain(
-      "translate3d(var(--tutorial-drag-x), 0, 0)",
+      "left: var(--tutorial-drag-x, 0%)",
     );
+    expect(bookingTutorial).toContain('nextStep === "edit" ? "edit"');
   });
 });

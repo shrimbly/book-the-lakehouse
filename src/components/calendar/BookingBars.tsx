@@ -48,6 +48,7 @@ export function ConfirmBar({
   paymentMode = false,
   onPaymentConfirm,
   onEditControlsChange,
+  tutorialEditIndicator = false,
 }: {
   start: string;
   end: string;
@@ -67,6 +68,7 @@ export function ConfirmBar({
   paymentMode?: boolean;
   onPaymentConfirm?: () => void;
   onEditControlsChange?: (editing: boolean) => void;
+  tutorialEditIndicator?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -288,6 +290,15 @@ export function ConfirmBar({
                   >
                     Edit
                   </button>
+                  {tutorialEditIndicator ? (
+                    <span
+                      aria-hidden
+                      data-booking-tutorial-edit-pointer
+                      className="booking-tutorial-edit-pointer"
+                    >
+                      <span />
+                    </span>
+                  ) : null}
                 </span>
               </span>
             </div>

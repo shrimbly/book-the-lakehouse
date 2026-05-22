@@ -52,6 +52,11 @@ describe("BookingTutorial", () => {
     fireEvent.click(screen.getByRole("button", { name: "Skip" }));
 
     expect(window.localStorage.getItem(BOOKING_TUTORIAL_STORAGE_KEY)).toBe("1");
+    expect(document.querySelector(".booking-tutorial-card.is-closing")).toBeTruthy();
+
+    act(() => vi.advanceTimersByTime(260));
+
+    expect(screen.queryByText("How to book your stay")).toBeNull();
   });
 
   it("does not auto-open after the browser has seen it", () => {
@@ -102,14 +107,19 @@ describe("BookingTutorial", () => {
     expect(onVisualChange).toHaveBeenLastCalledWith(
       expect.objectContaining({
         previewRows: expect.any(Array),
-        pointer: expect.objectContaining({ motion: "drag" }),
+        pointer: expect.objectContaining({
+          gridColumnEnd: expect.any(Number),
+          motion: "drag",
+        }),
       }),
     );
 
     fireEvent.click(screen.getByRole("button", { name: /next/i }));
     expect(screen.getByText("Edit an existing booking")).toBeTruthy();
-    act(() => vi.advanceTimersByTime(1150));
     expect(screen.getByRole("button", { name: "Save" })).toBeTruthy();
+    expect(
+      document.querySelector("[data-booking-tutorial-edit-pointer]"),
+    ).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: /next/i }));
     act(() => vi.advanceTimersByTime(1150));
@@ -118,5 +128,6 @@ describe("BookingTutorial", () => {
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
 
     expect(window.localStorage.getItem(BOOKING_TUTORIAL_STORAGE_KEY)).toBe("1");
+    expect(document.querySelector(".booking-tutorial-card.is-closing")).toBeTruthy();
   });
 });

@@ -13,6 +13,8 @@ import { buildBookingRows, buildPreviewRows } from "./ribbons";
 import type { TutorialCalendarOverlay } from "./CalendarGrid";
 import { ChoiceBar, ConfirmBar } from "./Overlays";
 
+const TUTORIAL_EXIT_MS = 260;
+
 type TutorialStepId =
   | "intro"
   | "tap-start"
@@ -35,35 +37,29 @@ const STEP_IDS: TutorialStepId[] = [
 
 const STEP_COPY: Record<
   TutorialStepId,
-  { eyebrow: string; title: string; body: string }
+  { title: string; body: string }
 > = {
   intro: {
-    eyebrow: "Quick tour",
     title: "How to book your stay",
     body: "A short practice run using this calendar. Nothing here changes real bookings.",
   },
   "tap-start": {
-    eyebrow: "Way one",
     title: "Tap your first day",
     body: "Tap once on the day you arrive. The bar appears and asks you to pick an end date.",
   },
   "tap-end": {
-    eyebrow: "Way one",
     title: "Tap your last day",
     body: "Tap the last day of your stay. The ribbon grows across every night before you confirm.",
   },
   drag: {
-    eyebrow: "Way two",
     title: "Or press and drag",
     body: "You can also drag across the calendar to choose the whole stay in one motion.",
   },
   edit: {
-    eyebrow: "Change plans",
     title: "Edit an existing booking",
     body: "Tap your booking, choose Edit, then nudge the start or end date.",
   },
   delete: {
-    eyebrow: "Change plans",
     title: "Delete a booking",
     body: "Tap your booking and choose Delete. The final step asks you to confirm before removing it.",
   },
@@ -79,6 +75,7 @@ export function BookingTutorial({
   onVisualChange: (visual: TutorialCalendarOverlay | null) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [phase, setPhase] = useState<TutorialPhase>("idle");
   const demo = useMemo(() => buildDemoRanges(cells), [cells]);
@@ -101,6 +98,7 @@ export function BookingTutorial({
     function replay() {
       setStepIndex(0);
       setPhase("idle");
+      setIsClosing(false);
       setOpen(true);
     }
 
@@ -114,10 +112,6 @@ export function BookingTutorial({
       return;
     }
 
-    if (stepId === "edit" && phase === "choice") {
-      const timer = window.setTimeout(() => setPhase("edit"), 1150);
-      return () => window.clearTimeout(timer);
-    }
     if (stepId === "delete" && phase === "choice") {
       const timer = window.setTimeout(() => setPhase("delete"), 1150);
       return () => window.clearTimeout(timer);
@@ -142,9 +136,14 @@ export function BookingTutorial({
   }
 
   function close() {
+    if (isClosing) return;
     markSeen();
-    setOpen(false);
-    setPhase("idle");
+    setIsClosing(true);
+    window.setTimeout(() => {
+      setOpen(false);
+      setIsClosing(false);
+      setPhase("idle");
+    }, TUTORIAL_EXIT_MS);
   }
 
   function next() {
@@ -153,7 +152,9 @@ export function BookingTutorial({
       return;
     }
     const nextStep = STEP_IDS[stepIndex + 1];
-    setPhase(nextStep === "edit" || nextStep === "delete" ? "choice" : "idle");
+    setPhase(
+      nextStep === "edit" ? "edit" : nextStep === "delete" ? "choice" : "idle",
+    );
     setStepIndex((value) => value + 1);
   }
 
@@ -171,7 +172,10 @@ export function BookingTutorial({
     <>
       <div
         aria-hidden
-        className="themed-overlay-wash fixed inset-0 z-[18] opacity-80"
+        className={[
+          "booking-tutorial-wash themed-overlay-wash fixed inset-0 z-[18] opacity-80",
+          isClosing ? "is-closing" : "",
+        ].join(" ")}
       />
       <div
         aria-hidden
@@ -195,16 +199,16 @@ export function BookingTutorial({
         aria-labelledby="booking-tutorial-title"
         data-booking-tutorial
         data-booking-tutorial-step={stepId}
-        className="booking-tutorial-card fixed left-1/2 bottom-[150px] z-[50] w-[min(360px,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[14px] border border-rule bg-paper px-4 py-4 text-ink shadow-panel sm:bottom-auto sm:left-auto sm:right-8 sm:top-8 sm:translate-x-0"
+        className={[
+          "booking-tutorial-card fixed left-1/2 top-[max(1rem,env(safe-area-inset-top))] z-[50] w-[min(360px,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[14px] border border-rule bg-paper px-4 py-4 text-ink shadow-panel sm:left-auto sm:right-8 sm:top-8 sm:translate-x-0",
+          isClosing ? "is-closing" : "",
+        ].join(" ")}
       >
         <div className="mb-3 flex items-start justify-between gap-4">
           <div>
-            <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-faint">
-              {copy.eyebrow}
-            </div>
             <h2
               id="booking-tutorial-title"
-              className="m-0 mt-1 text-[18px] font-semibold leading-tight tracking-[-0.025em]"
+              className="m-0 text-[18px] font-semibold leading-tight tracking-[-0.025em]"
             >
               {copy.title}
             </h2>
@@ -212,6 +216,7 @@ export function BookingTutorial({
           <button
             type="button"
             onClick={close}
+            disabled={isClosing}
             aria-label="Close tutorial"
             className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-paper/70 text-muted shadow-control transition-colors hover:bg-soft hover:text-ink"
           >
@@ -235,6 +240,7 @@ export function BookingTutorial({
             <button
               type="button"
               onClick={close}
+              disabled={isClosing}
               className="rounded-full px-3 py-1.5 text-[12px] font-medium text-muted transition-colors hover:text-ink"
             >
               Skip
@@ -242,6 +248,7 @@ export function BookingTutorial({
             <button
               type="button"
               onClick={next}
+              disabled={isClosing}
               className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-1.5 text-[12px] font-medium text-paper shadow-control transition-opacity hover:opacity-90"
             >
               {isLast ? "Done" : "Next"}
@@ -328,6 +335,7 @@ function renderDemoBar({
         onAdjustEnd={() => undefined}
         canAdjustStart={() => true}
         canAdjustEnd={() => true}
+        tutorialEditIndicator
       />
     );
   }
@@ -357,6 +365,7 @@ type TutorialDemoRanges = {
     tapStart: { gridRow: number; gridColumn: number };
     tapEnd: { gridRow: number; gridColumn: number };
     dragStart: { gridRow: number; gridColumn: number };
+    dragEnd: { gridRow: number; gridColumn: number };
     booking: { gridRow: number; gridColumn: number };
   };
 };
@@ -393,6 +402,10 @@ function buildDemoRanges(cells: Cell[]): TutorialDemoRanges | null {
         gridRow: drag[0].gridRow,
         gridColumn: drag[0].gridColumn,
       },
+      dragEnd: {
+        gridRow: drag[drag.length - 1].gridRow,
+        gridColumn: drag[drag.length - 1].gridColumn,
+      },
       booking: {
         gridRow: booking[0].gridRow,
         gridColumn: booking[0].gridColumn,
@@ -401,19 +414,20 @@ function buildDemoRanges(cells: Cell[]): TutorialDemoRanges | null {
   };
 }
 
-function findContiguousRange<T extends { cell: Cell }>(
+function findContiguousRange<T extends { cell: Cell; gridRow: number }>(
   cells: T[],
   length: number,
 ): T[] | null {
   for (let start = 0; start <= cells.length - length; start += 1) {
     const range = cells.slice(start, start + length);
+    const sameRow = range.every((entry) => entry.gridRow === range[0].gridRow);
     const contiguous = range.every((entry, index) => {
       if (index === 0) return true;
       const previous = new Date(`${range[index - 1].cell.iso}T00:00:00`);
       const current = new Date(`${entry.cell.iso}T00:00:00`);
       return current.getTime() - previous.getTime() === 86_400_000;
     });
-    if (contiguous) return range;
+    if (sameRow && contiguous) return range;
   }
   return null;
 }
@@ -453,7 +467,11 @@ function visualForStep({
   if (stepId === "drag") {
     return {
       previewRows: buildPreviewRows(demo.drag, cells),
-      pointer: { ...demo.pointer.dragStart, motion: "drag" },
+      pointer: {
+        ...demo.pointer.dragStart,
+        gridColumnEnd: demo.pointer.dragEnd.gridColumn + 1,
+        motion: "drag",
+      },
     };
   }
 

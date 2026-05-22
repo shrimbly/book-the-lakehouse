@@ -15,6 +15,7 @@ export type TutorialCalendarOverlay = {
   pointer?: {
     gridRow: number;
     gridColumn: number;
+    gridColumnEnd?: number;
     motion: "tap" | "drag";
   } | null;
 };
@@ -279,10 +280,28 @@ export function CalendarGrid({
             <div
               aria-hidden
               data-booking-tutorial-pointer={tutorialOverlay.pointer.motion}
-              className="booking-tutorial-pointer pointer-events-none z-[35] mb-7 sm:mb-9 self-end justify-self-center"
+              className="booking-tutorial-pointer pointer-events-none z-[35] mb-7 sm:mb-9 self-end"
               style={{
                 gridRow: tutorialOverlay.pointer.gridRow - 1,
-                gridColumn: tutorialOverlay.pointer.gridColumn,
+                gridColumn: tutorialOverlay.pointer.gridColumnEnd
+                  ? `${tutorialOverlay.pointer.gridColumn} / ${tutorialOverlay.pointer.gridColumnEnd}`
+                  : tutorialOverlay.pointer.gridColumn,
+                ["--tutorial-drag-cells" as string]: tutorialOverlay.pointer
+                  .gridColumnEnd
+                  ? tutorialOverlay.pointer.gridColumnEnd -
+                    tutorialOverlay.pointer.gridColumn
+                  : 1,
+                ["--tutorial-drag-x" as string]: tutorialOverlay.pointer
+                  .gridColumnEnd
+                  ? `${
+                      ((tutorialOverlay.pointer.gridColumnEnd -
+                        tutorialOverlay.pointer.gridColumn -
+                        1) /
+                        (tutorialOverlay.pointer.gridColumnEnd -
+                          tutorialOverlay.pointer.gridColumn)) *
+                      100
+                    }%`
+                  : "0%",
               }}
             >
               <span />

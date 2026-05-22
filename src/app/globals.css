@@ -183,9 +183,16 @@ main.month-gesture-preview {
 }
 
 .booking-tutorial-pointer {
-  --tutorial-drag-x: 190%;
-  width: 30px;
-  height: 30px;
+  --tutorial-pointer-size: 30px;
+  display: grid;
+  justify-items: center;
+}
+
+.booking-tutorial-pointer span {
+  position: relative;
+  left: 0;
+  width: var(--tutorial-pointer-size);
+  height: var(--tutorial-pointer-size);
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-paper) 86%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
@@ -195,7 +202,8 @@ main.month-gesture-preview {
   animation: tutorial-pointer-tap 1800ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
 }
 
-.booking-tutorial-pointer span {
+.booking-tutorial-pointer span::after {
+  content: "";
   width: 9px;
   height: 9px;
   border-radius: 999px;
@@ -203,12 +211,52 @@ main.month-gesture-preview {
 }
 
 .booking-tutorial-pointer[data-booking-tutorial-pointer="drag"] {
+  justify-items: start;
+}
+
+.booking-tutorial-pointer[data-booking-tutorial-pointer="drag"] span {
+  margin-left: calc(
+    ((100% / var(--tutorial-drag-cells, 1)) - var(--tutorial-pointer-size)) / 2
+  );
   animation-name: tutorial-pointer-drag;
-  animation-duration: 2300ms;
+  animation-duration: 2600ms;
 }
 
 .booking-tutorial-card {
   animation: tutorial-card-in 360ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+
+.booking-tutorial-card.is-closing {
+  animation: tutorial-card-out 260ms cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+
+.booking-tutorial-wash {
+  animation: tutorial-wash-in 260ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+
+.booking-tutorial-wash.is-closing {
+  animation: tutorial-wash-out 260ms cubic-bezier(0.4, 0, 0.6, 1) both;
+}
+
+.booking-tutorial-edit-pointer {
+  --tutorial-pointer-size: 24px;
+  width: var(--tutorial-pointer-size);
+  height: var(--tutorial-pointer-size);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-paper) 86%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
+  box-shadow: var(--shadow-control);
+  display: inline-grid;
+  place-items: center;
+  margin-left: 1px;
+  animation: tutorial-pointer-tap 1800ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+}
+
+.booking-tutorial-edit-pointer span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-ink);
 }
 
 .selection-backdrop {
@@ -620,6 +668,29 @@ main.month-gesture-preview {
   }
 }
 
+@keyframes tutorial-card-out {
+  from {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(-10px) scale(0.985);
+  }
+}
+
+@keyframes tutorial-wash-in {
+  from { opacity: 0; }
+  to { opacity: 0.8; }
+}
+
+@keyframes tutorial-wash-out {
+  from { opacity: 0.8; }
+  to { opacity: 0; }
+}
+
 @keyframes tutorial-pointer-tap {
   0% { opacity: 0; transform: translateY(8px) scale(0.82); }
   18% { opacity: 1; transform: translateY(0) scale(1); }
@@ -629,16 +700,25 @@ main.month-gesture-preview {
 }
 
 @keyframes tutorial-pointer-drag {
-  0% { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.82); }
-  14% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-  24% { transform: translate3d(0, 0, 0) scale(0.84); }
-  72% { transform: translate3d(var(--tutorial-drag-x), 0, 0) scale(0.84); }
-  84%, 100% { opacity: 1; transform: translate3d(var(--tutorial-drag-x), 0, 0) scale(1); }
+  0% { left: 0; opacity: 0; transform: translate3d(0, 8px, 0) scale(0.82); }
+  14% { left: 0; opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  24% { left: 0; transform: translate3d(0, 0, 0) scale(0.84); }
+  72% {
+    left: var(--tutorial-drag-x, 0%);
+    transform: translate3d(0, 0, 0) scale(0.84);
+  }
+  84%, 100% {
+    left: var(--tutorial-drag-x, 0%);
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .booking-tutorial-pointer,
-  .booking-tutorial-card {
+  .booking-tutorial-card,
+  .booking-tutorial-wash,
+  .booking-tutorial-edit-pointer {
     animation-duration: 1ms;
   }
 }
