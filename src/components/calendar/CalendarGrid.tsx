@@ -516,9 +516,20 @@ function PreviewRibbon({
   exiting?: boolean;
   editing?: boolean;
 }) {
+  const ribbonPositionVars = {
+    ["--rl" as string]: `${((row.startCol - 1) / 7) * 100}%`,
+    ["--rw" as string]: `${((row.endCol - row.startCol) / 7) * 100}%`,
+    ["--ol" as string]: row.roundLeft ? 1 : 0,
+    ["--or" as string]: row.roundRight ? 1 : 0,
+  };
+
   return (
     <div
-      style={{ gridRow: row.gridRow - 1, gridColumn: "1 / 8" }}
+      style={{
+        gridRow: row.gridRow - 1,
+        gridColumn: "1 / 8",
+        ...ribbonPositionVars,
+      }}
       className="pointer-events-none relative"
     >
       <div
@@ -532,10 +543,6 @@ function PreviewRibbon({
           ribbonRadius(row),
         ].join(" ")}
         style={{
-          ["--rl" as string]: `${((row.startCol - 1) / 7) * 100}%`,
-          ["--rw" as string]: `${((row.endCol - row.startCol) / 7) * 100}%`,
-          ["--ol" as string]: row.roundLeft ? 1 : 0,
-          ["--or" as string]: row.roundRight ? 1 : 0,
           backgroundColor: `color-mix(in srgb, ${person.color} var(--theme-ribbon-fill-color), var(--color-paper) var(--theme-ribbon-fill-paper))`,
           color: `color-mix(in srgb, ${person.color} var(--theme-ribbon-label-color), var(--color-ink) var(--theme-ribbon-label-ink))`,
         }}
@@ -544,6 +551,16 @@ function PreviewRibbon({
           <span className="block truncate">{person.first}</span>
         ) : null}
       </div>
+      {editing && !exiting ? (
+        <div
+          data-preview-ribbon-focus
+          aria-hidden
+          className={[
+            "preview-ribbon-focus absolute bottom-1.5 sm:bottom-2.5 h-[20px] sm:h-[26px]",
+            ribbonRadius(row),
+          ].join(" ")}
+        />
+      ) : null}
     </div>
   );
 }

@@ -139,18 +139,17 @@ describe("animation contracts", () => {
     expect(keyframes("avatar-shrink")).toContain("scale(0.78)");
   });
 
-  it("keeps the edited booking preview above the wash without recoloring it", () => {
-    expect(cssBlock(".preview-ribbon-fill.is-editing")).toContain(
-      "z-index: 25",
-    );
-    expect(cssBlock(".preview-avatar.is-editing")).toContain("z-index: 26");
+  it("keeps edited booking focus above the wash without recoloring the ribbon", () => {
+    expect(cssBlock(".preview-ribbon-fill.is-editing")).not.toContain("z-index");
+    expect(cssBlock(".preview-ribbon-focus")).toContain("z-index: 25");
+    expect(cssBlock(".preview-ribbon-focus")).not.toContain("background:");
     expect(css).not.toContain(
       ':root[data-theme="dark"] .preview-ribbon-fill.is-editing',
     );
     expect(css).not.toContain("--theme-ribbon-fill-color: 100%");
     expect(css).not.toContain("filter: saturate(1.35) brightness(1.22)");
-    expect(css).toContain(".preview-avatar.is-editing");
     expect(calendarGrid).toContain("data-preview-ribbon={editing && !exiting");
+    expect(calendarGrid).toContain("data-preview-ribbon-focus");
     expect(calendarGrid).toContain("data-booking-ribbon={row.bookingId}");
     expect(calendarGrid).toContain("previewEditing: boolean");
     expect(calendarGrid).toContain("editing={previewEditing}");

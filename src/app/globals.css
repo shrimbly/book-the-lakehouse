@@ -443,12 +443,16 @@ main.month-gesture-preview {
   .preview-ribbon-fill { --ribbon-edge: 6px; }
 }
 
-.preview-ribbon-fill.is-editing {
+.preview-ribbon-focus {
+  --ribbon-edge: 4px;
+  left: calc(var(--rl) + (var(--ol) * var(--ribbon-edge)));
+  width: calc(var(--rw) - ((var(--ol) + var(--or)) * var(--ribbon-edge)));
+  border: 1px solid color-mix(in srgb, var(--color-ink) 34%, transparent);
   z-index: 25;
 }
 
-.preview-avatar.is-editing {
-  z-index: 26;
+@media (min-width: 640px) {
+  .preview-ribbon-focus { --ribbon-edge: 6px; }
 }
 
 @starting-style {
