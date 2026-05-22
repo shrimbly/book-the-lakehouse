@@ -30,3 +30,8 @@ Use `rg` for search. Before editing Next.js App Router, Server Actions, metadata
 - Keep mutations authorized in `src/app/actions.ts`; validate identity, ownership, date formats, and booking conflicts server-side.
 - Do not commit `.env.local` or real credentials.
 - Prefer small, focused changes over broad refactors.
+
+## Setup Wizard
+
+- `/setup` (or `npm run setup`): Triggers the interactive setup script `scripts/setup.js` to link Vercel/Neon integrations and configure `.env.local` interactively.
+

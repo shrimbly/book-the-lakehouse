@@ -79,22 +79,24 @@ export function PinGate() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12 sm:py-20">
       <div className="w-full max-w-[360px]">
-        <div
-          className="mb-8 sm:mb-12 flex items-center justify-between text-[12px] text-muted animate-blur-fade"
-          style={{ animationDelay: "0ms" }}
-        >
-          <span>
-            <span className="mr-2 inline-block h-[5px] w-[5px] -translate-y-[1px] rounded-full bg-ink" />
-            {siteName}
-          </span>
-          <ThemeToggle />
+        <div className="inline-block">
+          <div
+            className="mb-8 sm:mb-12 flex items-center justify-between text-[12px] text-muted animate-blur-fade"
+            style={{ animationDelay: "0ms" }}
+          >
+            <span>
+              <span className="mr-2 inline-block h-[5px] w-[5px] -translate-y-[1px] rounded-full bg-ink" />
+              {siteName}
+            </span>
+            <ThemeToggle />
+          </div>
+          <h1
+            className="m-0 mb-2 text-[36px] sm:text-[44px] font-semibold leading-[0.95] tracking-[-0.04em] animate-blur-fade"
+            style={{ animationDelay: "80ms" }}
+          >
+            What&rsquo;s the pin?
+          </h1>
         </div>
-        <h1
-          className="m-0 mb-2 text-[36px] sm:text-[44px] font-semibold leading-[0.95] tracking-[-0.04em] animate-blur-fade"
-          style={{ animationDelay: "80ms" }}
-        >
-          What&rsquo;s the pin?
-        </h1>
         <p
           className="mb-7 sm:mb-9 text-[14px] text-muted animate-blur-fade"
           style={{ animationDelay: "160ms" }}
@@ -111,7 +113,7 @@ export function PinGate() {
               ref={(el) => {
                 refs.current[i] = el;
               }}
-              type="text"
+              type="password"
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={LENGTH}

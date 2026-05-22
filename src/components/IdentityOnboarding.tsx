@@ -1,17 +1,48 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { Person } from "@/lib/data";
 import { setIdentity } from "@/app/actions";
 import { siteName } from "@/lib/site";
 import { AddPersonForm } from "./AddPersonForm";
 import { ThemeToggle } from "./ThemeToggle";
 
+const ADD_PERSON_PANEL_ANIMATION_MS = 420;
+
 export function IdentityOnboarding({ people }: { people: Person[] }) {
   const [isPending, startTransition] = useTransition();
   const [pickingId, setPickingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [addPanelState, setAddPanelState] = useState<
+    "closed" | "opening" | "closing"
+  >("closed");
+  const addPanelRef = useRef<HTMLDivElement>(null);
+  const adding = addPanelState !== "closed";
+
+  useEffect(() => {
+    if (addPanelState !== "opening") return;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const behavior = prefersReducedMotion ? "auto" : "smooth";
+    const revealPageBottom = () => {
+      const page = document.scrollingElement ?? document.documentElement;
+      page.scrollTo({ top: page.scrollHeight, behavior });
+    };
+    const settledTimer = window.setTimeout(revealPageBottom, 460);
+    return () => {
+      window.clearTimeout(settledTimer);
+    };
+  }, [addPanelState]);
+
+  useEffect(() => {
+    if (addPanelState !== "closing") return;
+    const timer = window.setTimeout(
+      () => setAddPanelState("closed"),
+      ADD_PERSON_PANEL_ANIMATION_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [addPanelState]);
 
   function pick(id: string) {
     if (isPending) return;
@@ -24,6 +55,12 @@ export function IdentityOnboarding({ people }: { people: Person[] }) {
         setPickingId(null);
       }
     });
+  }
+
+  function closeAddPersonPanel() {
+    setAddPanelState((current) =>
+      current === "closed" ? "closed" : "closing",
+    );
   }
 
   return (
@@ -93,17 +130,29 @@ export function IdentityOnboarding({ people }: { people: Person[] }) {
           className="animate-blur-fade"
         >
           {adding ? (
-            <div className="mt-3 rounded-[10px] border border-dashed border-rule p-3">
-              <AddPersonForm
-                onCancel={() => setAdding(false)}
-                onCreated={(id) => pick(id)}
-              />
+            <div
+              ref={addPanelRef}
+              className={[
+                "identity-add-person-panel mt-3 overflow-hidden rounded-[10px] border border-dashed border-rule",
+                addPanelState === "closing"
+                  ? "identity-add-person-panel-closing"
+                  : "",
+              ].join(" ")}
+            >
+              <div className="identity-onboarding-add-person p-3">
+                <AddPersonForm
+                  adaptiveEmptyInitial
+                  nameFocusDelayMs={460}
+                  onCancel={closeAddPersonPanel}
+                  onCreated={(id) => pick(id)}
+                />
+              </div>
             </div>
           ) : (
             <button
               type="button"
               disabled={isPending}
-              onClick={() => setAdding(true)}
+              onClick={() => setAddPanelState("opening")}
               className="mt-3 flex w-full items-center gap-3 rounded-[10px] border border-dashed border-rule bg-paper/70 px-3 py-2.5 text-left text-[13px] text-muted shadow-control transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-rule text-[16px] font-medium text-faint shrink-0">

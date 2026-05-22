@@ -158,6 +158,23 @@ main.month-gesture-preview {
   }
 }
 
+.identity-add-person-panel {
+  display: grid;
+  animation: identity-add-person-expand 420ms cubic-bezier(0.16, 0.84, 0.44, 1) both;
+  transform-origin: top center;
+}
+
+.identity-add-person-panel-closing {
+  animation-name: identity-add-person-collapse;
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.identity-add-person-panel > .identity-onboarding-add-person {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .theme-toggle-orb {
   transition:
     opacity 540ms cubic-bezier(0.16, 0.84, 0.44, 1),
@@ -655,6 +672,40 @@ main.month-gesture-preview {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes identity-add-person-expand {
+  from {
+    grid-template-rows: 0fr;
+    border-color: transparent;
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(-6px);
+  }
+  to {
+    grid-template-rows: 1fr;
+    border-color: var(--color-rule);
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes identity-add-person-collapse {
+  from {
+    grid-template-rows: 1fr;
+    border-color: var(--color-rule);
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+  to {
+    grid-template-rows: 0fr;
+    border-color: transparent;
+    opacity: 0;
+    filter: blur(5px);
+    transform: translateY(-5px);
+  }
+}
+
 @keyframes tutorial-card-in {
   from {
     opacity: 0;
@@ -718,7 +769,8 @@ main.month-gesture-preview {
   .booking-tutorial-pointer,
   .booking-tutorial-card,
   .booking-tutorial-wash,
-  .booking-tutorial-edit-pointer {
+  .booking-tutorial-edit-pointer,
+  .identity-add-person-panel {
     animation-duration: 1ms;
   }
 }

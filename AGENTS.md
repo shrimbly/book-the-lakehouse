@@ -64,3 +64,8 @@ Run `npm run lint` and `npm run build` before handing off code changes when prac
 - Use `npm run db:generate` for migrations when changing schema shape.
 - Use `npm run db:push` for quick local/prototype database sync.
 - `npm run db:seed` truncates and reseeds people/bookings from `src/lib/data.ts`.
+
+## Custom Slash Commands
+
+- `/setup`: This slash command runs the interactive repository configuration wizard (`npm run setup`). When invoked, you (the AI agent) should guide the user step-by-step through logging in to Vercel, connecting their Neon Postgres database and Vercel Blob integrations, pulling env files down, interactively configuring site copy and family PINs in `.env.local`, and executing the initial database sync and seeding.
+

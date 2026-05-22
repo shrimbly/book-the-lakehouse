@@ -38,7 +38,30 @@ better than the word "admin" ever could.
 
 ## Simple Setup
 
-The easiest production setup is Vercel + Neon:
+The easiest way to get up and running is to use the **interactive setup wizard**. It handles Vercel CLI checks, walks you through account linking, guides you in connecting Neon Postgres and Vercel Blob integrations, automatically pulls down connection strings, prompts you for custom family settings, and runs initial database migrations and seeds!
+
+To start the wizard, simply run:
+
+```bash
+npm run setup
+```
+
+*(Or type `/setup` in your AI coding assistant's chat UI!)*
+
+The setup wizard will guide you through:
+1. **Deployment Assessment**: Assessing your Vercel familiarity and tailoring the step-by-step guidance.
+2. **Vercel Storage Integrations**: Explaining how to easily add Neon Postgres and Vercel Blob storage.
+3. **Environment Sync**: Pulling down secure secrets (`DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`) via the Vercel CLI automatically.
+4. **Interactive Settings Customizer**: Prompting you step-by-step for custom values like your `FAMILY_PIN`, site title, nightly costs, bank details, and admin IDs, then generating a perfect `.env.local` file.
+5. **Database Initialization**: Synchronizing the database schema (`db:push`) and seeding sample family members and bookings (`db:seed`).
+
+Once complete, your calendar is production-ready!
+
+---
+
+### Manual Setup (Alternative)
+
+If you prefer to configure the application manually:
 
 1. Fork and clone this repo.
 2. Create a [Vercel](https://vercel.com/pricing) project from your fork. The Hobby plan is a good starting point for personal use.

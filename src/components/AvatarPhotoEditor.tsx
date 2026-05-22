@@ -11,6 +11,7 @@ type DraftPhoto = { blob: Blob; url: string };
 export function AvatarPhotoEditor({
   initial,
   color,
+  initialClassName = "text-[#faf8f4]",
   imageUrl,
   disabled = false,
   isSaving = false,
@@ -21,6 +22,7 @@ export function AvatarPhotoEditor({
 }: {
   initial: string;
   color: string;
+  initialClassName?: string;
   imageUrl?: string | null;
   disabled?: boolean;
   isSaving?: boolean;
@@ -273,6 +275,7 @@ export function AvatarPhotoEditor({
           <AvatarPreview
             initial={initial}
             color={color}
+            initialClassName={initialClassName}
             imageUrl={shownImageUrl}
           />
           {shownImageUrl ? (
@@ -458,10 +461,12 @@ export function AvatarPhotoEditor({
 function AvatarPreview({
   initial,
   color,
+  initialClassName,
   imageUrl,
 }: {
   initial: string;
   color: string;
+  initialClassName: string;
   imageUrl?: string | null;
 }) {
   if (imageUrl) {
@@ -477,7 +482,10 @@ function AvatarPreview({
 
   return (
     <span
-      className="grid h-full w-full place-items-center bg-soft text-[24px] font-semibold leading-none text-[#faf8f4]"
+      className={[
+        "avatar-preview-initial grid h-full w-full place-items-center bg-soft text-[24px] font-semibold leading-none",
+        initialClassName,
+      ].join(" ")}
       style={{ backgroundColor: color.startsWith("var(") ? undefined : color }}
     >
       {initial}

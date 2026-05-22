@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { FormEvent } from "react";
 import { createPerson, uploadProfileImage } from "@/app/actions";
 import { PALETTE } from "@/lib/palette";
@@ -8,10 +8,14 @@ import { AvatarPhotoEditor } from "./AvatarPhotoEditor";
 
 export function AddPersonForm({
   compact = false,
+  nameFocusDelayMs = 0,
+  adaptiveEmptyInitial = false,
   onCancel,
   onCreated,
 }: {
   compact?: boolean;
+  nameFocusDelayMs?: number;
+  adaptiveEmptyInitial?: boolean;
   onCancel: () => void;
   onCreated: (id: string) => void;
 }) {
@@ -20,6 +24,14 @@ export function AddPersonForm({
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      nameInputRef.current?.focus({ preventScroll: true });
+    }, nameFocusDelayMs);
+    return () => window.clearTimeout(timer);
+  }, [nameFocusDelayMs]);
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,6 +75,9 @@ export function AddPersonForm({
           <AvatarPhotoEditor
             initial={(first.trim().charAt(0) || "+").toUpperCase()}
             color={color ?? "var(--color-muted)"}
+            initialClassName={
+              adaptiveEmptyInitial && !color ? "text-ink" : "text-[#faf8f4]"
+            }
             disabled={isPending}
             size="compact"
             onDraftChange={(draft) => setPhotoBlob(draft?.blob ?? null)}
@@ -74,7 +89,7 @@ export function AddPersonForm({
               Name
             </span>
             <input
-              autoFocus
+              ref={nameInputRef}
               value={first}
               onChange={(e) => setFirst(e.currentTarget.value)}
               maxLength={64}
