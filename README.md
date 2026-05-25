@@ -35,10 +35,14 @@ people take turns using.
 Mary mode is named for my aunt Mary, who embodies the idea of an admin far
 better than the word "admin" ever could.
 
+<p align="center">
+  <video src="./public/btl-1.mp4" controls width="100%" muted playsinline></video>
+</p>
+
 ## Simple Setup
 
-If you're pair-programming with an AI assistant, just type `/setup` in the chat.
-Otherwise the interactive wizard does the same thing:
+If you have an AI coding assistant, type `/setup` in the chat. Otherwise run
+the interactive wizard:
 
 ```bash
 npm run setup
