@@ -4,7 +4,7 @@
 
 <div align="center">
 
-### A tiny, beautiful, and low-cost booking calendar for the family holiday home.
+### A tiny, beautiful, and free to host booking calendar for the family holiday home.
 
 [MIT licensed](./LICENSE) · built with Next.js, React, Drizzle, Neon, and Vercel Blob
 
@@ -12,10 +12,7 @@
 
 <br>
 
-A small app for the very specific, very real problem of sharing a family holiday
-home without turning the family chat into a booking tribunal: a private calendar
-with a shared PIN, optional stay costs, bank transfer details, photos from the
-trip, and just enough ceremony to keep everyone honest.
+A small app for sharing the family holiday home without turning the family chat into a booking tribunal: a private calendar with a shared PIN, optional stay costs, bank transfer details, photos from the trip, and just enough ceremony to keep everyone honest.
 
 ## What It Does
 
@@ -23,10 +20,9 @@ For families with a lakehouse, bach, cabin, cottage, or other beloved place that
 people take turns using.
 
 - Pick your identity, then claim dates on a spacious month calendar.
-- Server-side conflict checks keep double-bookings off the table.
 - Edit and delete your own stays — no global admin powers required.
 - Optional nightly costs, bank details, and a transfer prompt at booking time.
-- **Mary mode** — a quiet admin area where trusted Marys can tick off paid stays.
+- **Mary mode** — a quiet admin area where trusted users can tick off paid stays.
 - Profile and stay photos when Vercel Blob is configured.
 - Runs locally with demo data before you connect Neon.
 - Rename the place, people, footer, PIN, colors, and cookie prefix to suit your own family.
@@ -53,7 +49,7 @@ Blob integrations, pulls the connection strings down for you, prompts for your
 family-specific settings (PIN, site title, nightly costs, bank details, admins),
 and runs the initial schema push and seed.
 
-Once it finishes, the calendar is production-ready.
+Once it finishes, you're good to go.
 
 ---
 
@@ -193,4 +189,4 @@ people who just want to book a weekend away without learning a new system.
 
 ## License
 
-MIT. Use it for your own bach, cabin, cottage, lakehouse, or holiday home.
+MIT. 
